@@ -20,7 +20,10 @@ impl WindowWrapper {
                 let geo = xconn
                     .get_geometry(*window_id as glutin::platform::unix::x11::ffi::Window)
                     .unwrap(); // TODO
-                glutin::dpi::PhysicalSize { width: geo.width, height: geo.height }
+                glutin::dpi::PhysicalSize {
+                    width: geo.width,
+                    height: geo.height,
+                }
             }
         }
     }
@@ -30,42 +33,60 @@ impl WindowWrapper {
     }
 }
 
-pub fn build_raw_context(
-    event_loop: &glutin::event_loop::EventLoop<()>, window_id: Option<u64>
-) -> (glutin::RawContext<glutin::PossiblyCurrent>, WindowWrapper) {
-    let context_builder = glutin::ContextBuilder::new()
-        .with_multisampling(4)
-        .with_vsync(true);
-    let (context, window) = match window_id {
-        Some(window_id) => {
-            let xconn = Arc::new(glutin::platform::unix::x11::XConnection::new(None).unwrap()); // TODO
-            let context = unsafe {
-                context_builder
-                    .build_raw_x11_context(xconn.clone(), window_id)
-                    .unwrap() // TODO
-            };
-            let window = WindowWrapper::RawWindow {
-                xconn: xconn,
-                window_id: window_id,
-            };
-            (context, window)
-        }
-        None => {
-            let window_builder =
-                glutin::window::WindowBuilder::new().with_title("Goban Screenhack");
-            let (context, window) = unsafe {
-                context_builder
-                    .build_windowed(window_builder, &event_loop)
-                    .unwrap()
-                    .split()
-            };
-            let window = WindowWrapper::GlutinWindow { window };
-            (context, window)
-        }
-    };
-
-    let context = unsafe { context.make_current().unwrap() }; // TODO
-
-    (context, window)
+pub struct XScreensaverContext {
+    context: glutin::RawContext<glutin::PossiblyCurrent>,
+    window: WindowWrapper,
 }
 
+impl XScreensaverContext {
+    pub fn new(
+        event_loop: &glutin::event_loop::EventLoop<()>,
+        window_id: Option<u64>,
+    ) -> XScreensaverContext {
+        let context_builder = glutin::ContextBuilder::new()
+            .with_multisampling(4)
+            .with_vsync(true);
+        let (context, window) = match window_id {
+            Some(window_id) => {
+                let xconn = Arc::new(glutin::platform::unix::x11::XConnection::new(None).unwrap()); // TODO
+                let context = unsafe {
+                    context_builder
+                        .build_raw_x11_context(xconn.clone(), window_id)
+                        .unwrap() // TODO
+                };
+                let window = WindowWrapper::RawWindow {
+                    xconn: xconn,
+                    window_id: window_id,
+                };
+                (context, window)
+            }
+            None => {
+                let window_builder =
+                    glutin::window::WindowBuilder::new().with_title("Goban Screenhack");
+                let (context, window) = unsafe {
+                    context_builder
+                        .build_windowed(window_builder, &event_loop)
+                        .unwrap()
+                        .split()
+                };
+                let window = WindowWrapper::GlutinWindow { window };
+                (context, window)
+            }
+        };
+
+        let context = unsafe { context.make_current().unwrap() }; // TODO
+
+        XScreensaverContext {
+            context: context,
+            window: window,
+        }
+    }
+
+    pub fn window(&self) -> &WindowWrapper {
+        &self.window
+    }
+
+    pub fn context(&self) -> &glutin::RawContext<glutin::PossiblyCurrent> {
+        &self.context
+    }
+}
