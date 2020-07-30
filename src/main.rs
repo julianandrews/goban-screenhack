@@ -4,17 +4,27 @@ extern crate nanovg;
 
 mod goban;
 mod goban_display;
-mod xscreensaver_window;
+mod ui;
+mod xscreensaver_context;
 
 use std::env;
-use std::rc::Rc;
+
+fn get_window_id() -> Option<u64> {
+    env::var("XSCREENSAVER_WINDOW")
+        .ok()
+        .map(|window_id_string| {
+            if window_id_string.starts_with("0x") {
+                u64::from_str_radix(window_id_string.trim_start_matches("0x"), 16).unwrap()
+            } else {
+                u64::from_str_radix(&window_id_string, 10).unwrap()
+            }
+        })
+}
 
 fn main() {
     let event_loop = glutin::event_loop::EventLoop::new();
-    let window_id = env::var("XSCREENSAVER_WINDOW").ok().map(|window_id_string|
-        window_id_string.parse::<u64>().unwrap() // TODO
-    );
-    let xs = xscreensaver_window::XScreensaverContext::new(&event_loop, window_id);
+    let window_id = get_window_id();
+    let xs = xscreensaver_context::XScreensaverContext::new(&event_loop, window_id).unwrap(); // TODO
 
     unsafe {
         gl::load_with(|symbol| xs.context().get_proc_address(symbol) as *const _);
@@ -39,9 +49,9 @@ fn main() {
             _ => (),
         }
 
-        let physical_size = xs.window().inner_size();
+        let physical_size = xs.inner_size().unwrap(); // TODO
         let (width, height) = (physical_size.width, physical_size.height);
-        let scale_factor = xs.window().scale_factor();
+        let scale_factor = xs.scale_factor().unwrap(); // TODO
 
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);
@@ -49,11 +59,10 @@ fn main() {
         }
 
         let (width, height) = (width as f32, height as f32);
-        let goban = Rc::new(goban::Goban::new());
-        let goban_display = goban_display::GobanDisplay::new(goban);
+        let ui = ui::UI::new();
 
-        nanovg_context.frame((width, height), scale_factor, |mut frame| {
-            goban_display.draw(&mut frame, width, height);
+        nanovg_context.frame((width, height), scale_factor as f32, |mut frame| {
+            ui.draw(&mut frame, width, height);
         });
         xs.context().swap_buffers().unwrap();
     });
