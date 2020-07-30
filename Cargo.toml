@@ -5,3 +5,9 @@ authors = ["Julian Andrews <jandrews271@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+glutin = "0.24.1"
+gl = "0.14.0"
+
+[dependencies.nanovg]
+version = "1.0.2"
+features = ["gl3"]
