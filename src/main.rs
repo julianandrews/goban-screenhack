@@ -2,29 +2,32 @@ extern crate gl;
 extern crate glutin;
 extern crate nanovg;
 
+mod args;
 mod goban;
 mod goban_display;
 mod ui;
 mod xscreensaver_context;
 
-use std::env;
-
-fn get_window_id() -> Option<u64> {
-    env::var("XSCREENSAVER_WINDOW")
-        .ok()
-        .map(|window_id_string| {
-            if window_id_string.starts_with("0x") {
-                u64::from_str_radix(window_id_string.trim_start_matches("0x"), 16).unwrap()
-            } else {
-                u64::from_str_radix(&window_id_string, 10).unwrap()
-            }
-        })
-}
-
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let opts = args::build_opts();
+    let parsed_args = match args::parse_args(&opts, &args) {
+        Ok(args) => args,
+        Err(error) => {
+            eprintln!("{}", error);
+            args::print_usage(&args[0], &opts);
+            std::process::exit(1);
+        }
+    };
+
+    if parsed_args.print_help {
+        args::print_usage(&args[0], &opts);
+        return;
+    }
+
     let event_loop = glutin::event_loop::EventLoop::new();
-    let window_id = get_window_id();
-    let xs = xscreensaver_context::XScreensaverContext::new(&event_loop, window_id).unwrap(); // TODO
+    let xs =
+        xscreensaver_context::XScreensaverContext::new(&event_loop, parsed_args.window_type).unwrap(); // TODO
 
     unsafe {
         gl::load_with(|symbol| xs.context().get_proc_address(symbol) as *const _);

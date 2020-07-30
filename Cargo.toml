@@ -3,8 +3,14 @@ name = "goban_screenhack"
 version = "0.1.0"
 authors = ["Julian Andrews <jandrews271@gmail.com>"]
 edition = "2018"
+default-run = "goban"
+
+[[bin]]
+name = "goban"
+path = "src/main.rs"
 
 [dependencies]
+getopts = "0.2.21"
 glutin = "0.24.1"
 gl = "0.14.0"
 

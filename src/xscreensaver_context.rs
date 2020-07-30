@@ -3,6 +3,14 @@ use std::sync::Arc;
 use glutin::platform::unix::x11::XConnection;
 use glutin::platform::unix::RawContextExt;
 
+#[derive(Debug)]
+pub enum WindowType {
+    New,
+    Root,
+    WindowId(u64),
+}
+
+#[derive(Debug)]
 enum WindowWrapper {
     GlutinWindow {
         window: glutin::window::Window,
@@ -21,23 +29,13 @@ pub struct XScreensaverContext {
 impl XScreensaverContext {
     pub fn new(
         event_loop: &glutin::event_loop::EventLoop<()>,
-        window_id: Option<u64>,
+        window_type: WindowType,
     ) -> Result<XScreensaverContext, Box<dyn std::error::Error>> {
         let context_builder = glutin::ContextBuilder::new()
             .with_multisampling(4)
             .with_vsync(true);
-        let (context, window) = match window_id {
-            Some(window_id) => {
-                let xconn = Arc::new(XConnection::new(None)?);
-                let context =
-                    unsafe { context_builder.build_raw_x11_context(xconn.clone(), window_id)? };
-                let window = WindowWrapper::RawWindow {
-                    xconn: xconn,
-                    window_id: window_id,
-                };
-                (context, window)
-            }
-            None => {
+        let (context, window) = match window_type {
+            WindowType::New => {
                 let window_builder =
                     glutin::window::WindowBuilder::new().with_title("Goban Screenhack");
                 let (context, window) = unsafe {
@@ -47,6 +45,21 @@ impl XScreensaverContext {
                         .split()
                 };
                 let window = WindowWrapper::GlutinWindow { window };
+                (context, window)
+            }
+            _ => {
+                let xconn = Arc::new(XConnection::new(None)?);
+                let window_id = match window_type {
+                    WindowType::WindowId(window_id) => window_id,
+                    WindowType::Root => unsafe { (xconn.xlib.XRootWindow)(xconn.display, 0) },
+                    _ => panic!("Should never happen"),
+                };
+                let context =
+                    unsafe { context_builder.build_raw_x11_context(xconn.clone(), window_id)? };
+                let window = WindowWrapper::RawWindow {
+                    xconn: xconn,
+                    window_id: window_id,
+                };
                 (context, window)
             }
         };
