@@ -5,7 +5,6 @@ use std::path::PathBuf;
 use super::xscreensaver_context::WindowType;
 
 const DEFAULT_MOVE_DELAY: u64 = 5000;
-const DEFAULT_START_DELAY: u64 = 2500;
 const DEFAULT_END_DELAY: u64 = 10000;
 const DEFAULT_SGF_DIR: &str = "/home/julian/sgfs"; // TODO
 
@@ -14,7 +13,6 @@ pub struct GobanHackArgs {
     pub window_type: WindowType,
     pub sgf_dirs: Vec<PathBuf>,
     pub move_delay: u64,
-    pub start_delay: u64,
     pub end_delay: u64,
     pub print_help: bool,
 }
@@ -53,15 +51,13 @@ pub fn parse_args(
     let window_type = parse_window_type(&matches)?;
     let sgf_dirs = parse_sgf_dirs(&matches);
     let move_delay = parse_flag_or_default(&matches, "move-delay", DEFAULT_MOVE_DELAY)?;
-    let start_delay = parse_flag_or_default(&matches, "start-delay", DEFAULT_MOVE_DELAY)?;
-    let end_delay = parse_flag_or_default(&matches, "end-delay", DEFAULT_MOVE_DELAY)?;
+    let end_delay = parse_flag_or_default(&matches, "end-delay", DEFAULT_END_DELAY)?;
     let print_help = matches.opt_present("h");
 
     Ok(GobanHackArgs {
         window_type: window_type,
         sgf_dirs: sgf_dirs,
         move_delay: move_delay,
-        start_delay: start_delay,
         end_delay: end_delay,
         print_help: print_help,
     })
@@ -87,15 +83,6 @@ pub fn build_opts() -> getopts::Options {
         "",
         "move-delay",
         &format!("Time (ms) between moves (default {})", DEFAULT_MOVE_DELAY),
-        "NUM",
-    );
-    opts.optopt(
-        "",
-        "start-delay",
-        &format!(
-            "Time (ms) before first move (default {})",
-            DEFAULT_START_DELAY
-        ),
         "NUM",
     );
     opts.optopt(

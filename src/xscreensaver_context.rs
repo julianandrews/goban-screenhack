@@ -3,7 +3,7 @@ use std::sync::Arc;
 use glutin::platform::unix::x11::XConnection;
 use glutin::platform::unix::RawContextExt;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum WindowType {
     New,
     Root,

@@ -1,19 +1,17 @@
-use std::rc::Rc;
-
 use super::goban;
 
-pub struct GobanDisplay {
-    goban: Rc<goban::Goban>,
+pub struct GobanDisplay<'a> {
+    goban: &'a goban::Goban,
 }
 
-impl GobanDisplay {
+impl<'a> GobanDisplay<'a> {
     // TODO: Line color, board color
     const LINE_WIDTH: f32 = 1.0 / 396.0;
     const BORDER_WIDTH: f32 = 1.0 / 198.0;
     const HOSHI_RADIUS: f32 = 1.0 / 198.0;
-    const NINE_HOSHIS: [(u32, u32); 4] = [(2, 2), (2, 6), (6, 2), (6, 6)];
-    const THIRTEEN_HOSHIS: [(u32, u32); 5] = [(3, 3), (3, 9), (6, 6), (9, 3), (9, 9)];
-    const NINETEEN_HOSHIS: [(u32, u32); 9] = [
+    const NINE_HOSHIS: [(u8, u8); 4] = [(2, 2), (2, 6), (6, 2), (6, 6)];
+    const THIRTEEN_HOSHIS: [(u8, u8); 5] = [(3, 3), (3, 9), (6, 6), (9, 3), (9, 9)];
+    const NINETEEN_HOSHIS: [(u8, u8); 9] = [
         (3, 3),
         (3, 9),
         (3, 15),
@@ -25,7 +23,7 @@ impl GobanDisplay {
         (15, 15),
     ];
 
-    pub fn new(goban: Rc<goban::Goban>) -> GobanDisplay {
+    pub fn new(goban: &'a goban::Goban) -> GobanDisplay<'a> {
         GobanDisplay { goban: goban }
     }
 
@@ -72,7 +70,7 @@ impl GobanDisplay {
             );
         }
 
-        for &stone in self.goban.stones() {
+        for stone in self.goban.stones() {
             self.draw_stone(&frame, stone);
         }
     }
@@ -147,14 +145,14 @@ impl GobanDisplay {
         frame.transformed(transform, |frame| self.draw_board(frame));
     }
 
-    fn point_frame_transform(&self, x: u32, y: u32) -> nanovg::Transform {
+    fn point_frame_transform(&self, x: u8, y: u8) -> nanovg::Transform {
         let scale = self.line_spacing();
         nanovg::Transform::new()
             .with_translation(scale * x as f32, scale * y as f32)
             .with_scale(scale, scale)
     }
 
-    fn hoshi_points(&self) -> impl Iterator<Item = &(u32, u32)> {
+    fn hoshi_points(&self) -> impl Iterator<Item = &(u8, u8)> {
         match self.goban.size {
             goban::BoardSize::Nine => GobanDisplay::NINE_HOSHIS.iter(),
             goban::BoardSize::Thirteen => GobanDisplay::THIRTEEN_HOSHIS.iter(),
