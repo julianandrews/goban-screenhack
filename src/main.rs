@@ -21,7 +21,7 @@ enum GameState {
 
 fn load_sgfs(_sgf_dirs: &Vec<std::path::PathBuf>) -> Result<Vec<sgf::SgfNode>, sgf::SgfParseError> {
     // TODO
-    sgf::parse("(;SZ[13]B[dc];W[ef](;B[aa])(;B[cc];W[ee]))")
+    sgf::parse("(;SZ[13:9]B[dc];W[ef](;B[aa])(;B[cc];W[ee]))")
 }
 
 fn main() {
@@ -85,7 +85,6 @@ fn main() {
         match game_state {
             GameState::New => {
                 println!("Initializing with {:?}", sgf_node);
-                // TODO: Handle board size correctly
                 let board_size = sgf_node.get_size().unwrap_or((19, 19));
                 ui.reset(board_size);
                 // TODO: Handle other start properties

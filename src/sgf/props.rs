@@ -12,7 +12,28 @@ pub struct Point {
     pub y: u8,
 }
 
-// TODO: Handle all properties
+#[derive(Clone, Debug)]
+pub struct Text(String);
+
+impl std::ops::Deref for Text {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct SimpleText(String);
+
+impl std::ops::Deref for SimpleText {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum SgfProp {
     // Move Properties
@@ -21,154 +42,117 @@ pub enum SgfProp {
     MN(i64),
     W(Point),
     // Setup Properties (illegal to place two colors on one point)
-    // AB(PointList),
-    // AE(PointList),
-    // AW(PointList),
+    AB(Vec<Point>),
+    AE(Vec<Point>),
+    AW(Vec<Point>),
     // Node Annotation properties
-    C(String),
+    C(Text),
     DM(Double),
     GB(Double),
     GW(Double),
     HO(Double),
-    N(String),
+    N(SimpleText),
     UC(Double),
     V(f64),
     // Move annotation properties (illegal without a move in the node)
     BM(Double),
-    // DO,
-    // IT,
+    DO,
+    IT,
     TE(Double),
     // Markup Properties (illegal to have more than one on a point)
-    // AR(Vec<ComposedPoint>),
-    // CR(PointList),
-    // DD(EListPoint),
-    // LB
-    // LN
-    // MA(PointList),
-    // SL(PointList),
-    // SQ(PointList),
-    // TR(PointList),
+    // TODO: AR(list of point:point)
+    CR(Vec<Point>),
+    DD(Vec<Point>),
+    // TODO: LB(list of point:point)
+    // TODO: LN(list of point:point)
+    MA(Vec<Point>),
+    SL(Vec<Point>),
+    SQ(Vec<Point>),
+    TR(Vec<Point>),
     // Root Properties
-    // AP
-    CA(String),
+    // AP(simpletext:simpletext)
+    CA(SimpleText),
     FF(i64), // range 1-4
     GM(i64), // range 1-16, only handle Go = 1!
     ST(i64), // range 0-3
-    // SZ
+    SZ((u8, u8)),
     // Game info properties
     HA(i64), // >=2, AB should be set within same node
     KM(f64),
-    AN(String),
-    BR(String),
-    BT(String),
-    CP(String),
-    DT(String),
-    EV(String),
-    GN(String),
-    GC(String),
-    ON(String),
-    OT(String),
-    PB(String),
-    PC(String),
-    PW(String),
-    RE(String),
-    RO(String),
-    RU(String),
-    SO(String),
+    AN(SimpleText),
+    BR(SimpleText),
+    BT(SimpleText),
+    CP(SimpleText),
+    DT(SimpleText),
+    EV(SimpleText),
+    GN(SimpleText),
+    GC(Text),
+    ON(SimpleText),
+    OT(SimpleText),
+    PB(SimpleText),
+    PC(SimpleText),
+    PW(SimpleText),
+    RE(SimpleText),
+    RO(SimpleText),
+    RU(SimpleText),
+    SO(SimpleText),
     TM(f64),
-    US(String),
-    WR(String),
-    WT(String),
+    US(SimpleText),
+    WR(SimpleText),
+    WT(SimpleText),
     // Timing Properties
     BL(f64),
     OB(i64),
     OW(i64),
     WL(f64),
     // Miscellaneous properties
-    // FG
+    // TODO: FG (nothing | num:simpletext)
     PM(i64), // range 1-2
-    // VW(EListPoint),
-    // TB
-    // TW
+    VW(Vec<Point>),
+    TB(Vec<Point>),
+    TW(Vec<Point>),
     Unknown(String, Vec<String>),
 }
 
 impl SgfProp {
     pub fn new(ident: String, values: Vec<String>) -> Result<SgfProp, SgfParseError> {
         match &ident[..] {
-            "B" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::B(value.parse()?))
-            }
-            "KO" => {
-                get_no_value(&values)?;
-                Ok(SgfProp::KO)
-            }
-            "MN" => {
-                let value = get_single_value(&values)?;
-                let value = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::MN(value))
-            }
-            "W" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::W(value.parse()?))
-            }
-            "C" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::C(value.to_string()))
-            }
-            "DM" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::DM(value.parse()?))
-            }
-            "GB" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::GB(value.parse()?))
-            }
-            "GW" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::GW(value.parse()?))
-            }
-            "HO" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::HO(value.parse()?))
-            }
-            "N" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::N(value.to_string()))
-            }
-            "UC" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::UC(value.parse()?))
-            }
-            "V" => {
-                let value = get_single_value(&values)?;
-                let value: f64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::V(value))
-            }
-            "BM" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::BM(value.parse()?))
-            }
-            "TE" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::TE(value.parse()?))
-            }
-            "CA" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::CA(value.to_string()))
-            }
+            // "B" => Ok(SgfProp::B(parse_single_value(&values)?)),
+            "B" => Ok(SgfProp::B(parse_single_value(&values)?)),
+            "KO" => verify_empty(&values).map(|()| Ok(SgfProp::KO))?,
+            "MN" => Ok(SgfProp::MN(parse_single_value(&values)?)),
+            "W" => Ok(SgfProp::W(parse_single_value(&values)?)),
+            "AB" => Ok(SgfProp::AB(parse_list_point(&values)?)),
+            "AE" => Ok(SgfProp::AE(parse_list_point(&values)?)),
+            "AW" => Ok(SgfProp::AW(parse_list_point(&values)?)),
+            "C" => Ok(SgfProp::C(parse_single_value(&values)?)),
+            "DM" => Ok(SgfProp::DM(parse_single_value(&values)?)),
+            "GB" => Ok(SgfProp::GB(parse_single_value(&values)?)),
+            "GW" => Ok(SgfProp::GW(parse_single_value(&values)?)),
+            "HO" => Ok(SgfProp::HO(parse_single_value(&values)?)),
+            "N" => Ok(SgfProp::N(parse_single_value(&values)?)),
+            "UC" => Ok(SgfProp::UC(parse_single_value(&values)?)),
+            "V" => Ok(SgfProp::V(parse_single_value(&values)?)),
+            "DO" => verify_empty(&values).map(|()| Ok(SgfProp::DO))?,
+            "IT" => verify_empty(&values).map(|()| Ok(SgfProp::IT))?,
+            "BM" => Ok(SgfProp::BM(parse_single_value(&values)?)),
+            "TE" => Ok(SgfProp::TE(parse_single_value(&values)?)),
+            "CR" => Ok(SgfProp::CR(parse_list_point(&values)?)),
+            "DD" => Ok(SgfProp::DD(parse_elist_point(&values)?)),
+            "MA" => Ok(SgfProp::MA(parse_list_point(&values)?)),
+            "SL" => Ok(SgfProp::SL(parse_list_point(&values)?)),
+            "SQ" => Ok(SgfProp::SQ(parse_list_point(&values)?)),
+            "TR" => Ok(SgfProp::TR(parse_list_point(&values)?)),
+            "CA" => Ok(SgfProp::CA(parse_single_value(&values)?)),
             "FF" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
+                let value = parse_single_value(&values)?;
                 if value < 0 || value > 4 {
                     Err(SgfParseError::InvalidProperty)?;
                 }
                 Ok(SgfProp::FF(value))
             }
             "GM" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
+                let value = parse_single_value(&values)?;
                 // Only Go is supported
                 if value != 1 {
                     Err(SgfParseError::InvalidProperty)?;
@@ -176,165 +160,106 @@ impl SgfProp {
                 Ok(SgfProp::GM(value))
             }
             "ST" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
+                let value = parse_single_value(&values)?;
                 if value < 0 || value > 3 {
                     Err(SgfParseError::InvalidProperty)?;
                 }
                 Ok(SgfProp::ST(value))
             }
+            "SZ" => Ok(SgfProp::SZ(parse_size(&values)?)),
             "HA" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
+                let value: i64 = parse_single_value(&values)?;
                 if !value >= 2 {
                     Err(SgfParseError::InvalidProperty)?;
                 }
                 Ok(SgfProp::HA(value))
             }
-            "KM" => {
-                let value = get_single_value(&values)?;
-                let value: f64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::KM(value))
-            }
-            "AN" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::AN(value.to_string()))
-            }
-            "BR" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::BR(value.to_string()))
-            }
-            "BT" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::BT(value.to_string()))
-            }
-            "CP" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::CP(value.to_string()))
-            }
-            "DT" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::DT(value.to_string()))
-            }
-            "EV" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::EV(value.to_string()))
-            }
-            "GN" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::GN(value.to_string()))
-            }
-            "GC" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::GC(value.to_string()))
-            }
-            "ON" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::ON(value.to_string()))
-            }
-            "OT" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::OT(value.to_string()))
-            }
-            "PB" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::PB(value.to_string()))
-            }
-            "PC" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::PC(value.to_string()))
-            }
-            "PW" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::PW(value.to_string()))
-            }
-            "RE" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::RE(value.to_string()))
-            }
-            "RO" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::RO(value.to_string()))
-            }
-            "RU" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::RU(value.to_string()))
-            }
-            "SO" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::SO(value.to_string()))
-            }
-            "TM" => {
-                let value = get_single_value(&values)?;
-                let value: f64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::TM(value))
-            }
-            "US" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::US(value.to_string()))
-            }
-            "WR" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::WR(value.to_string()))
-            }
-            "WT" => {
-                let value = get_single_value(&values)?;
-                Ok(SgfProp::WT(value.to_string()))
-            }
-            "BL" => {
-                let value = get_single_value(&values)?;
-                let value: f64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::BL(value))
-            }
-            "OB" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::OB(value))
-            }
-            "OW" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::OW(value))
-            }
-            "WL" => {
-                let value = get_single_value(&values)?;
-                let value: f64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
-                Ok(SgfProp::WL(value))
-            }
+            "KM" => Ok(SgfProp::KM(parse_single_value(&values)?)),
+            "AN" => Ok(SgfProp::AN(parse_single_value(&values)?)),
+            "BR" => Ok(SgfProp::BR(parse_single_value(&values)?)),
+            "BT" => Ok(SgfProp::BT(parse_single_value(&values)?)),
+            "CP" => Ok(SgfProp::CP(parse_single_value(&values)?)),
+            "DT" => Ok(SgfProp::DT(parse_single_value(&values)?)),
+            "EV" => Ok(SgfProp::EV(parse_single_value(&values)?)),
+            "GN" => Ok(SgfProp::GN(parse_single_value(&values)?)),
+            "GC" => Ok(SgfProp::GC(parse_single_value(&values)?)),
+            "ON" => Ok(SgfProp::ON(parse_single_value(&values)?)),
+            "OT" => Ok(SgfProp::OT(parse_single_value(&values)?)),
+            "PB" => Ok(SgfProp::PB(parse_single_value(&values)?)),
+            "PC" => Ok(SgfProp::PC(parse_single_value(&values)?)),
+            "PW" => Ok(SgfProp::PW(parse_single_value(&values)?)),
+            "RE" => Ok(SgfProp::RE(parse_single_value(&values)?)),
+            "RO" => Ok(SgfProp::RO(parse_single_value(&values)?)),
+            "RU" => Ok(SgfProp::RU(parse_single_value(&values)?)),
+            "SO" => Ok(SgfProp::SO(parse_single_value(&values)?)),
+            "TM" => Ok(SgfProp::TM(parse_single_value(&values)?)),
+            "US" => Ok(SgfProp::US(parse_single_value(&values)?)),
+            "WR" => Ok(SgfProp::WR(parse_single_value(&values)?)),
+            "WT" => Ok(SgfProp::WT(parse_single_value(&values)?)),
+            "BL" => Ok(SgfProp::BL(parse_single_value(&values)?)),
+            "OB" => Ok(SgfProp::OB(parse_single_value(&values)?)),
+            "OW" => Ok(SgfProp::OW(parse_single_value(&values)?)),
+            "WL" => Ok(SgfProp::WL(parse_single_value(&values)?)),
             "PM" => {
-                let value = get_single_value(&values)?;
-                let value: i64 = value.parse().map_err(|_| SgfParseError::InvalidProperty)?;
+                let value = parse_single_value(&values)?;
                 if value < 1 || value > 2 {
                     Err(SgfParseError::InvalidProperty)?;
                 }
                 Ok(SgfProp::PM(value))
             }
+            "VW" => Ok(SgfProp::VW(parse_elist_point(&values)?)),
+            "TB" => Ok(SgfProp::TB(parse_elist_point(&values)?)),
+            "TW" => Ok(SgfProp::TW(parse_elist_point(&values)?)),
             _ => Ok(SgfProp::Unknown(ident, values)),
-        }
-    }
-
-    pub fn prop_ident(&self) -> &str {
-        match self {
-            SgfProp::B(_) => "B",
-            SgfProp::W(_) => "W",
-            SgfProp::Unknown(ident, _) => ident,
-            _ => unimplemented!(), // TODO
         }
     }
 }
 
-fn get_no_value(values: &Vec<String>) -> Result<(), SgfParseError> {
+fn verify_empty(values: &Vec<String>) -> Result<(), SgfParseError> {
     if !values.is_empty() {
         Err(SgfParseError::InvalidProperty)?;
     }
     Ok(())
 }
 
-fn get_single_value(values: &Vec<String>) -> Result<&str, SgfParseError> {
+fn parse_single_value<T: std::str::FromStr>(values: &Vec<String>) -> Result<T, SgfParseError> {
     if values.len() != 1 {
         Err(SgfParseError::InvalidProperty)?;
     }
-    Ok(&values[0])
+    values[0]
+        .parse()
+        .map_err(|_| SgfParseError::InvalidProperty)
+}
+
+fn parse_list_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
+    let points = parse_elist_point(values)?;
+    if points.is_empty() {
+        Err(SgfParseError::InvalidProperty)?;
+    }
+
+    Ok(points)
+}
+
+fn parse_elist_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
+    // TODO: Handle compressed list of points
+    values.iter().map(|v| v.parse()).collect()
+}
+
+fn parse_size(values: &Vec<String>) -> Result<(u8, u8), SgfParseError> {
+    if values.len() != 1 {
+        Err(SgfParseError::InvalidProperty)?;
+    }
+    let parts: Vec<&str> = values[0].split(":").collect();
+    if parts.len() == 1 {
+        let size = parts[0].parse().map_err(|_| SgfParseError::InvalidProperty)?;
+        Ok((size, size))
+    } else if parts.len() == 2 {
+        let width = parts[0].parse().map_err(|_| SgfParseError::InvalidProperty)?;
+        let height = parts[1].parse().map_err(|_| SgfParseError::InvalidProperty)?;
+        Ok((width, height))
+    } else {
+        Err(SgfParseError::InvalidProperty)?
+    }
 }
 
 impl std::str::FromStr for Point {
@@ -360,6 +285,22 @@ impl std::str::FromStr for Point {
             x: map_char(chars[0])?,
             y: map_char(chars[1])?,
         })
+    }
+}
+
+impl std::str::FromStr for Text {
+    type Err = SgfParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Text(s.to_string()))
+    }
+}
+
+impl std::str::FromStr for SimpleText {
+    type Err = SgfParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(SimpleText(s.to_string()))
     }
 }
 

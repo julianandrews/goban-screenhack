@@ -21,17 +21,10 @@ pub struct SgfNode {
 
 impl SgfNode {
     pub fn get_size(&self) -> Option<(u8, u8)> {
-        None // TODO
-    }
-
-    pub fn get_properties(&self, prop_ident: &str) -> Vec<SgfProp> {
-        let prop_ident = prop_ident.to_string();
-        self
-            .properties
-            .iter()
-            .cloned()
-            .filter(|prop| prop.prop_ident() == prop_ident)
-            .collect()
+        self.properties.iter().filter_map(|p| match p {
+            SgfProp::SZ(size) => Some(size.clone()),
+            _ => None
+        }).next()
     }
 
     pub fn get_move(&self) -> Option<Stone> {
