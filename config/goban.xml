@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<screensaver name="goban" _label="Goban">
+
+  <command arg="-root"/>
+
+  <number id="move-delay" type="spinbutton" arg="-move-delay %"
+          _label="Move delay (ms)" _low-label="Short" _high_label="Long"
+          low = "0" high="30000" default="5000"/>
+  <number id="end-delay" type="spinbutton" arg="-end-delay %"
+         _label="End of game delay (ms)" _low-label="Short" _high_label="Long"
+         low = "0" high="30000" default="10000"/>
+
+  <xscreensaver-updater />
+
+  <_description>
+Displays go games from sgf files.
+
+Use the -sgf-dir flag (in the advanced options) to specify a directory containing games to play.
+
+Written by Julian Andrews; 2020.
+  </_description>
+</screensaver>
