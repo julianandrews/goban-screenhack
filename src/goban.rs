@@ -34,8 +34,8 @@ impl Goban {
     }
 
     pub fn add_stone(&mut self, stone: Stone) -> Result<(), GobanError> {
+        // TODO: Validate that the stone is in range for the board.
         let key = (stone.x, stone.y);
-        // TODO: Validate that the stone is on the board.
         if self.stones.contains_key(&key) {
             Err(GobanError::InvalidMoveError)?;
         }

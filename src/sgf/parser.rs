@@ -14,6 +14,8 @@ pub fn parse(text: &str) -> Result<Vec<SgfNode>, SgfParseError> {
         Err(SgfParseError::InvalidGameTree)?;
     }
 
+    // TODO: validate root properties
+    // TODO: validate
     Ok(nodes)
 }
 
@@ -28,7 +30,6 @@ fn parse_game_tree(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
         Err(SgfParseError::InvalidGameTree)?;
     }
 
-    // TODO: Validate Game Tree level properties
     Ok((node, &text[1..]))
 }
 
@@ -63,7 +64,12 @@ fn parse_node(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
         children.push(node);
     }
 
-    // TODO: Validate Node level properties
+    // TODO: Validate no mix of move/setup properties.
+    // TODO: Validate no mix of B & W props (apparently multiple of one is fine).
+    // TODO: Validate no move annotations without move.
+    // TODO: Validate no more than one markup property per point.
+    // TODO: Validate that a KO property has a B or W in the same node.
+    // TODO: Validate DM, UC, GW, GB not mixed.
     Ok((
         SgfNode {
             properties: props,

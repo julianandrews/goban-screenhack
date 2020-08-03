@@ -60,11 +60,11 @@ pub enum SgfProp {
     IT,
     TE(Double),
     // Markup Properties (illegal to have more than one on a point)
-    // TODO: AR(list of point:point)
+    // TODO: AR(list of point:point) - validate unique, distinct points
     CR(Vec<Point>),
     DD(Vec<Point>),
-    // TODO: LB(list of point:point)
-    // TODO: LN(list of point:point)
+    // TODO: LB(list of point:simpletext)
+    // TODO: LN(list of point:point) - validate unique, distinct points
     MA(Vec<Point>),
     SL(Vec<Point>),
     SQ(Vec<Point>),
@@ -117,7 +117,6 @@ pub enum SgfProp {
 impl SgfProp {
     pub fn new(ident: String, values: Vec<String>) -> Result<SgfProp, SgfParseError> {
         match &ident[..] {
-            // "B" => Ok(SgfProp::B(parse_single_value(&values)?)),
             "B" => Ok(SgfProp::B(parse_single_value(&values)?)),
             "KO" => verify_empty(&values).map(|()| Ok(SgfProp::KO))?,
             "MN" => Ok(SgfProp::MN(parse_single_value(&values)?)),
@@ -241,7 +240,9 @@ fn parse_list_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
 }
 
 fn parse_elist_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
-    // TODO: Handle compressed list of points
+    // TODO: Handle compressed list of points.
+    // TODO: Validate the points are unique.
+    //       All props using point lists require this except DD. That feels like an oversight.
     values.iter().map(|v| v.parse()).collect()
 }
 
