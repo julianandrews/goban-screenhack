@@ -85,13 +85,8 @@ fn main() {
         match game_state {
             GameState::New => {
                 println!("Initializing with {:?}", sgf_node);
-                let board_size = match sgf_node.get_size() {
-                    Some((19, 19)) => goban::BoardSize::Nineteen,
-                    Some((13, 13)) => goban::BoardSize::Thirteen,
-                    Some((9, 9)) => goban::BoardSize::Nine,
-                    None => goban::BoardSize::Nineteen,
-                    _ => panic!("Unrecognized board size") // TODO
-                };
+                // TODO: Handle board size correctly
+                let board_size = sgf_node.get_size().unwrap_or((19, 19));
                 ui.reset(board_size);
                 // TODO: Handle other start properties
 

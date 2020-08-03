@@ -21,8 +21,7 @@ pub struct SgfNode {
 
 impl SgfNode {
     pub fn get_size(&self) -> Option<(u8, u8)> {
-        // TODO
-        Some((19, 19))
+        None // TODO
     }
 
     pub fn get_properties(&self, prop_ident: &str) -> Vec<SgfProp> {

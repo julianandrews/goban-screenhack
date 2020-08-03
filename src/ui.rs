@@ -8,7 +8,7 @@ pub struct UI {
 impl UI {
     pub fn new() -> UI {
         UI {
-            goban: goban::Goban::new(goban::BoardSize::Nineteen),
+            goban: goban::Goban::new((19, 19))
         }
     }
 
@@ -25,7 +25,7 @@ impl UI {
         self.goban.play_stone(stone)
     }
 
-    pub fn reset(&mut self, board_size: goban::BoardSize) {
+    pub fn reset(&mut self, board_size: (u8, u8)) {
         self.goban = goban::Goban::new(board_size);
     }
 }

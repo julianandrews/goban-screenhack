@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 pub use super::sgf::{StoneColor, Stone};
 
 pub struct Goban {
-    pub size: BoardSize,
+    pub size: (u8, u8),
     pub stones: HashMap<(u8, u8), StoneColor>,
     pub move_number: u64,
     pub black_captures: u64,
@@ -11,7 +11,7 @@ pub struct Goban {
 }
 
 impl Goban {
-    pub fn new(board_size: BoardSize) -> Goban {
+    pub fn new(board_size: (u8, u8)) -> Goban {
         Goban {
             size: board_size,
             stones: HashMap::new(),
@@ -35,6 +35,7 @@ impl Goban {
 
     pub fn add_stone(&mut self, stone: Stone) -> Result<(), GobanError> {
         let key = (stone.x, stone.y);
+        // TODO: Validate that the stone is on the board.
         if self.stones.contains_key(&key) {
             Err(GobanError::InvalidMoveError)?;
         }
@@ -66,7 +67,19 @@ impl Goban {
 
     fn neighbors(&self, point: (u8, u8)) -> impl Iterator<Item = (u8, u8)> {
         let (x, y) = point;
-        let neighbors = vec![(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)];
+        let mut neighbors = vec![];
+        if x < self.size.0 - 1 {
+            neighbors.push((x + 1, y));
+        }
+        if x > 0 {
+            neighbors.push((x - 1, y));
+        }
+        if y < self.size.1 - 1 {
+            neighbors.push((x, y + 1));
+        }
+        if y > 0 {
+            neighbors.push((x, y - 1));
+        }
 
         neighbors.into_iter()
     }
@@ -98,13 +111,6 @@ impl Goban {
 #[derive(Debug)]
 pub enum GobanError {
     InvalidMoveError,
-}
-
-#[derive(Copy, Clone)]
-pub enum BoardSize {
-    Nine = 9,
-    Thirteen = 13,
-    Nineteen = 19,
 }
 
 impl std::fmt::Display for GobanError {
