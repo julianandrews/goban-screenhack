@@ -84,23 +84,27 @@ fn main() {
         }
         match game_state {
             GameState::New => {
-                let board_size = goban::BoardSize::Thirteen;
-                // let board_size = match sgf_node.get_number("SZ") {
-                //     Ok(19) => goban::BoardSize::Nineteen,
-                //     Ok(13) => goban::BoardSize::Thirteen,
-                //     Ok(9) => goban::BoardSize::Nine,
-                //     _ => panic!(), // TODO
-                // };
+                println!("Initializing with {:?}", sgf_node);
+                let board_size = match sgf_node.get_size() {
+                    Some((19, 19)) => goban::BoardSize::Nineteen,
+                    Some((13, 13)) => goban::BoardSize::Thirteen,
+                    Some((9, 9)) => goban::BoardSize::Nine,
+                    None => goban::BoardSize::Nineteen,
+                    _ => panic!("Unrecognized board size") // TODO
+                };
                 ui.reset(board_size);
                 // TODO: Handle other start properties
 
-                println!("Initializing with {:?}", sgf_node);
                 game_state = GameState::Ongoing;
             },
             GameState::Ongoing => {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
                     println!("Processing Node: {:?}", sgf_node);
-                    // TODO: process various properties
+                    if let Some(stone) = sgf_node.get_move() {
+                        println!("Playing stone {:?}", stone);
+                        ui.play_stone(stone).unwrap(); // TODO
+                    }
+                    // TODO: process other properties
                     if sgf_node.children.is_empty() {
                         // TODO: avoid these stupid clones
                         sgf_node = sgfs.choose(&mut rng).unwrap().clone(); // sgfs is never empty

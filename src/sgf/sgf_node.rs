@@ -1,9 +1,16 @@
-use super::props::{SgfProp, Point};
+use super::props::SgfProp;
 
-#[derive(Copy, Clone, Debug)]
-pub enum Color {
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum StoneColor {
     Black,
     White,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Stone {
+    pub x: u8,
+    pub y: u8,
+    pub color: StoneColor,
 }
 
 #[derive(Clone, Debug)]
@@ -13,21 +20,38 @@ pub struct SgfNode {
 }
 
 impl SgfNode {
-    fn get_size(&self) -> Option<(u8, u8)> {
-        Some((13, 13))
+    pub fn get_size(&self) -> Option<(u8, u8)> {
+        // TODO
+        Some((19, 19))
     }
 
-    fn get_move(&self) -> Option<(Point, Color)> {
+    pub fn get_properties(&self, prop_ident: &str) -> Vec<SgfProp> {
+        let prop_ident = prop_ident.to_string();
+        self
+            .properties
+            .iter()
+            .cloned()
+            .filter(|prop| prop.prop_ident() == prop_ident)
+            .collect()
+    }
+
+    pub fn get_move(&self) -> Option<Stone> {
+        for prop in self.properties.iter() {
+            match prop {
+                SgfProp::B(point) => return Some(Stone {
+                    x: point.x,
+                    y: point.y,
+                    color: StoneColor::Black,
+                }),
+                SgfProp::W(point) => return Some(Stone {
+                    x: point.x,
+                    y: point.y,
+                    color: StoneColor::White,
+                }),
+                _ => {},
+            }
+        }
+
         None
-    //     // TODO: Handle B and W on same prop
-    //     if let Ok(s) = self.0.get_point("B") {
-    //         let point: Move = s.parse()?;
-    //         Ok(Some(Stone { x: point.x, y: point.y, color: StoneColor::Black }))
-    //     } else if let Ok(s) = self.0.get_point("W") {
-    //         let point: Move = s.parse()?;
-    //         Ok(Some(Stone { x: point.x, y: point.y, color: StoneColor::White }))
-    //     } else {
-    //         Ok(None)
-    //     }
     }
 }

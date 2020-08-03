@@ -312,6 +312,15 @@ impl SgfProp {
             _ => Ok(SgfProp::Unknown(ident, values)),
         }
     }
+
+    pub fn prop_ident(&self) -> &str {
+        match self {
+            SgfProp::B(_) => "B",
+            SgfProp::W(_) => "W",
+            SgfProp::Unknown(ident, _) => ident,
+            _ => unimplemented!(), // TODO
+        }
+    }
 }
 
 fn get_no_value(values: &Vec<String>) -> Result<(), SgfParseError> {

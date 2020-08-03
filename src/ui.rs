@@ -17,12 +17,12 @@ impl UI {
         goban_display.draw(frame, width, height);
     }
 
-    pub fn add_stone(&mut self, stone: goban::Stone) {
-        self.goban.add_stone(stone);
+    pub fn add_stone(&mut self, stone: goban::Stone) -> Result<(), goban::GobanError> {
+        self.goban.add_stone(stone)
     }
 
-    pub fn play_stone(&mut self, stone: goban::Stone) {
-        self.goban.play_stone(stone);
+    pub fn play_stone(&mut self, stone: goban::Stone) -> Result<(), goban::GobanError> {
+        self.goban.play_stone(stone)
     }
 
     pub fn reset(&mut self, board_size: goban::BoardSize) {
