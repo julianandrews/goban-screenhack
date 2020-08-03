@@ -2,16 +2,16 @@ extern crate gl;
 extern crate glutin;
 extern crate nanovg;
 
-mod sgf;
 mod args;
 mod goban;
 mod goban_display;
+mod sgf;
 mod ui;
 mod xscreensaver_context;
 
-use std::time::Duration;
-use rand::thread_rng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
+use std::time::Duration;
 
 enum GameState {
     New,
@@ -19,9 +19,29 @@ enum GameState {
     Ended,
 }
 
-fn load_sgfs(_sgf_dirs: &Vec<std::path::PathBuf>) -> Result<Vec<sgf::SgfNode>, sgf::SgfParseError> {
-    // TODO
-    sgf::parse("(;SZ[13:9]B[dc];W[ef](;B[aa])(;B[cc];W[ee]))")
+fn load_sgfs(
+    sgf_dirs: &Vec<std::path::PathBuf>,
+) -> Result<Vec<sgf::SgfNode>, Box<dyn std::error::Error>> {
+    let mut sgfs = vec![];
+    for dir in sgf_dirs.iter() {
+        for entry in std::fs::read_dir(&dir)? {
+            let path = entry?.path();
+            if path.is_file() {
+                match path.extension().and_then(std::ffi::OsStr::to_str) {
+                    Some("sgf") => {
+                        let contents = std::fs::read_to_string(path)?;
+                        match sgf::parse(&contents) {
+                            Ok(new_nodes) => sgfs.extend(new_nodes),
+                            Err(e) => eprintln!("{}", e),
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    Ok(sgfs)
 }
 
 fn main() {
@@ -43,15 +63,27 @@ fn main() {
 
     // Graphics setup
     let event_loop = glutin::event_loop::EventLoop::new();
-    let xs = xscreensaver_context::XScreensaverContext::new(&event_loop, parsed_args.window_type)
-        .unwrap(); // TODO
+    let xs = match xscreensaver_context::XScreensaverContext::new(
+        &event_loop,
+        parsed_args.window_type,
+    ) {
+        Ok(xs) => xs,
+        Err(e) => {
+            eprintln!("Creationg of XScreensaver Context failed: {}", e);
+            std::process::exit(1);
+        }
+    };
     unsafe {
         gl::load_with(|symbol| xs.context().get_proc_address(symbol) as *const _);
         gl::ClearColor(0.0, 0.0, 0.0, 1.0);
     }
-    let nanovg_context = nanovg::ContextBuilder::new()
-        .build()
-        .expect("Initialization of NanoVG failed!"); // TODO
+    let nanovg_context = match nanovg::ContextBuilder::new().build() {
+        Ok(nanovg_context) => nanovg_context,
+        Err(_) => {
+            eprintln!("Initialization of NanoVG failed");
+            std::process::exit(1);
+        }
+    };
 
     // Goban setup
     let sgfs = match load_sgfs(&parsed_args.sgf_dirs) {
@@ -61,6 +93,10 @@ fn main() {
             std::process::exit(1);
         }
     };
+    if sgfs.is_empty() {
+        eprintln!("No sgf files found");
+        std::process::exit(1);
+    }
     let mut rng = thread_rng();
     let mut sgf_node = sgfs.choose(&mut rng).unwrap().clone(); // sgfs is never empty
     let mut game_state = GameState::New;
@@ -84,18 +120,15 @@ fn main() {
         }
         match game_state {
             GameState::New => {
-                println!("Initializing with {:?}", sgf_node);
                 let board_size = sgf_node.get_size().unwrap_or((19, 19));
                 ui.reset(board_size);
                 // TODO: Handle other start properties
 
                 game_state = GameState::Ongoing;
-            },
+            }
             GameState::Ongoing => {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
-                    println!("Processing Node: {:?}", sgf_node);
                     if let Some(stone) = sgf_node.get_move() {
-                        println!("Playing stone {:?}", stone);
                         ui.play_stone(stone).unwrap(); // TODO
                     }
                     // TODO: process other properties
@@ -109,14 +142,13 @@ fn main() {
                     }
                     last_action_time = std::time::Instant::now();
                 }
-            },
+            }
             GameState::Ended => {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.end_delay) {
-                    println!("Ending Game");
                     game_state = GameState::New;
                     last_action_time = std::time::Instant::now();
                 }
-            },
+            }
         }
 
         let physical_size = xs.inner_size().unwrap(); // TODO

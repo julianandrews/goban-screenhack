@@ -89,7 +89,7 @@ pub fn build_opts() -> getopts::Options {
         "",
         "end-delay",
         &format!(
-            "Time (ms) before loadin a new game (default {})",
+            "Time (ms) before loading a new game (default {})",
             DEFAULT_END_DELAY
         ),
         "NUM",
