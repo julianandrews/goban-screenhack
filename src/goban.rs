@@ -40,11 +40,18 @@ impl Goban {
             Err(GobanError::InvalidMoveError)?;
         }
         self.stones.insert(key, stone.color);
+
+        Ok(())
+    }
+
+    pub fn play_stone(&mut self, stone: Stone) -> Result<(), GobanError> {
+        self.add_stone(stone)?;
         let opponent_color = match stone.color {
             StoneColor::Black => StoneColor::White,
             StoneColor::White => StoneColor::Black,
         };
         // Remove any neighboring groups with no liberties.
+        let key = (stone.x, stone.y);
         for neighbor in self.neighbors(key) {
             if let Some(color) = self.stones.get(&neighbor) {
                 if *color == opponent_color {
@@ -54,12 +61,6 @@ impl Goban {
         }
         // Now remove the played stone if still neccessary
         self.process_captures(&key);
-
-        Ok(())
-    }
-
-    pub fn play_stone(&mut self, stone: Stone) -> Result<(), GobanError> {
-        self.add_stone(stone)?;
         self.move_number += 1;
 
         Ok(())
@@ -100,10 +101,15 @@ impl Goban {
                 }
                 match self.stones.get(&neighbor) {
                     None => return,
-                    Some(c) if c == group_color => to_process.push_back(neighbor.clone()),
+                    Some(c) if c == group_color => {
+                        to_process.push_back(neighbor.clone());
+                    }
                     _ => {}
                 }
             }
+        }
+        for stone in group {
+            self.stones.remove(&stone);
         }
     }
 }
