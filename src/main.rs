@@ -1,17 +1,17 @@
 extern crate gl;
 extern crate glutin;
 extern crate nanovg;
+extern crate sgf_parse;
 
 mod args;
 mod goban;
 mod goban_display;
-mod sgf;
 mod ui;
 mod xscreensaver_context;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use sgf::props::SgfProp;
+use sgf_parse::props::SgfProp;
 use std::time::Duration;
 
 enum GameState {
@@ -22,7 +22,7 @@ enum GameState {
 
 fn load_sgfs(
     sgf_dirs: &Vec<std::path::PathBuf>,
-) -> Result<Vec<sgf::SgfNode>, Box<dyn std::error::Error>> {
+) -> Result<Vec<sgf_parse::SgfNode>, Box<dyn std::error::Error>> {
     let mut sgfs = vec![];
     for dir in sgf_dirs.iter() {
         for entry in std::fs::read_dir(&dir)? {
@@ -31,7 +31,7 @@ fn load_sgfs(
                 match path.extension().and_then(std::ffi::OsStr::to_str) {
                     Some("sgf") => {
                         let contents = std::fs::read_to_string(path.clone())?;
-                        match sgf::parse(&contents) {
+                        match sgf_parse::parse(&contents) {
                             Ok(new_nodes) => sgfs.extend(new_nodes),
                             Err(e) => eprintln!("Error parsing {}: {}", path.to_str().unwrap(), e),
                         }
@@ -129,7 +129,7 @@ fn main() {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
                     for prop in sgf_node.properties() {
                         match prop {
-                            SgfProp::B(sgf::props::Move::Move(point)) => {
+                            SgfProp::B(sgf_parse::props::Move::Move(point)) => {
                                 if point.x == 19
                                     && point.y == 19
                                     && ui.board_size().0 < 20
@@ -144,7 +144,7 @@ fn main() {
                                 })
                                 .unwrap(); // TODO
                             }
-                            SgfProp::W(sgf::props::Move::Move(point)) => {
+                            SgfProp::W(sgf_parse::props::Move::Move(point)) => {
                                 if point.x == 19
                                     && point.y == 19
                                     && ui.board_size().0 < 20

@@ -14,6 +14,7 @@ getopts = "0.2.21"
 glutin = "0.24.1"
 gl = "0.14.0"
 rand = "0.7.3"
+sgf-parse = { git = "https://github.com/julianandrews/sgf-parse" }
 
 [dependencies.nanovg]
 version = "1.0.2"
