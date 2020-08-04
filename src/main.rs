@@ -127,7 +127,7 @@ fn main() {
             }
             GameState::Ongoing => {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
-                    for prop in sgf_node.properties.iter() {
+                    for prop in sgf_node.properties() {
                         match prop {
                             SgfProp::B(sgf::props::Move::Move(point)) => {
                                 if point.x == 19
@@ -188,14 +188,14 @@ fn main() {
                             _ => {}
                         }
                     }
-                    if sgf_node.children.is_empty() {
-                        // TODO: avoid these stupid clones
-                        sgf_node = sgfs.choose(&mut rng).unwrap().clone(); // sgfs is never empty
-                        game_state = GameState::Ended;
-                    } else {
-                        // TODO: avoid these stupid clones
-                        sgf_node = sgf_node.clone().children.into_iter().next().unwrap();
-                    }
+                    // TODO: avoid these stupid clones
+                    sgf_node = match sgf_node.clone().into_iter().next() {
+                        None => {
+                            game_state = GameState::Ended;
+                            sgfs.choose(&mut rng).unwrap().clone() // sgfs is never empty
+                        }
+                        Some(node) => node,
+                    };
                     last_action_time = std::time::Instant::now();
                 }
             }

@@ -68,13 +68,7 @@ fn parse_node(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
     // TODO: Validate no more than one markup property per point.
     // TODO: Validate that a KO property has a B or W in the same node.
     // TODO: Validate DM, UC, GW, GB not mixed.
-    Ok((
-        SgfNode {
-            properties: props,
-            children: children,
-        },
-        text,
-    ))
+    Ok((SgfNode::new(props, children), text))
 }
 
 fn parse_property(mut text: &str) -> Result<(SgfProp, &str), SgfParseError> {
