@@ -1,13 +1,24 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
-pub use super::sgf::{StoneColor, Stone};
-
 pub struct Goban {
     pub size: (u8, u8),
     pub stones: HashMap<(u8, u8), StoneColor>,
     pub move_number: u64,
     pub black_captures: u64,
     pub white_captures: u64,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum StoneColor {
+    Black,
+    White,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Stone {
+    pub x: u8,
+    pub y: u8,
+    pub color: StoneColor,
 }
 
 impl Goban {
@@ -64,6 +75,10 @@ impl Goban {
         self.move_number += 1;
 
         Ok(())
+    }
+
+    pub fn clear_point(&mut self, point: (u8, u8)) {
+        self.stones.remove(&point);
     }
 
     fn neighbors(&self, point: (u8, u8)) -> impl Iterator<Item = (u8, u8)> {

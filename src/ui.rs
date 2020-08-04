@@ -25,6 +25,11 @@ impl UI {
         self.goban.play_stone(stone)
     }
 
+    pub fn clear_point(&mut self, point: (u8, u8)) {
+        self.goban.clear_point(point);
+    }
+
+
     pub fn reset(&mut self, board_size: (u8, u8)) {
         self.goban = goban::Goban::new(board_size);
     }

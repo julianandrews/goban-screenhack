@@ -128,10 +128,48 @@ fn main() {
             }
             GameState::Ongoing => {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
-                    if let Some(stone) = sgf_node.get_move() {
-                        ui.play_stone(stone).unwrap(); // TODO
+                    for prop in sgf_node.properties.iter() {
+                        match prop {
+                            sgf::SgfProp::B(point) => {
+                                ui.play_stone(goban::Stone {
+                                    x: point.x,
+                                    y: point.y,
+                                    color: goban::StoneColor::Black,
+                                }).unwrap(); // TODO
+                            }
+                            sgf::SgfProp::W(point) => {
+                                ui.play_stone(goban::Stone {
+                                    x: point.x,
+                                    y: point.y,
+                                    color: goban::StoneColor::White,
+                                }).unwrap(); // TODO
+                            }
+                            sgf::SgfProp::AB(points) => {
+                                for point in points.iter() {
+                                    ui.add_stone(goban::Stone {
+                                        x: point.x,
+                                        y: point.y,
+                                        color: goban::StoneColor::Black,
+                                    }).unwrap(); // TODO
+                                }
+                            }
+                            sgf::SgfProp::AW(points) => {
+                                for point in points.iter() {
+                                    ui.add_stone(goban::Stone {
+                                        x: point.x,
+                                        y: point.y,
+                                        color: goban::StoneColor::White,
+                                    }).unwrap(); // TODO
+                                }
+                            }
+                            sgf::SgfProp::AE(points) => {
+                                for point in points.iter() {
+                                    ui.clear_point((point.x, point.y));
+                                }
+                            }
+                            _ => {}
+                        }
                     }
-                    // TODO: process other properties
                     if sgf_node.children.is_empty() {
                         // TODO: avoid these stupid clones
                         sgf_node = sgfs.choose(&mut rng).unwrap().clone(); // sgfs is never empty
