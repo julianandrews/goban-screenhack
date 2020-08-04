@@ -11,6 +11,7 @@ mod xscreensaver_context;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use sgf::props::SgfProp;
 use std::time::Duration;
 
 enum GameState {
@@ -128,46 +129,62 @@ fn main() {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
                     for prop in sgf_node.properties.iter() {
                         match prop {
-                            sgf::SgfProp::B(point) => {
-                                // TODO: handle "tt" pass on 19x19 or smaller board
+                            SgfProp::B(sgf::props::Move::Move(point)) => {
+                                if point.x == 19
+                                    && point.y == 19
+                                    && ui.board_size().0 < 20
+                                    && ui.board_size().1 < 20
+                                {
+                                    continue; // "tt" pass
+                                }
                                 ui.play_stone(goban::Stone {
                                     x: point.x,
                                     y: point.y,
                                     color: goban::StoneColor::Black,
-                                }).unwrap(); // TODO
+                                })
+                                .unwrap(); // TODO
                             }
-                            sgf::SgfProp::W(point) => {
-                                // TODO: handle "tt" pass on 19x19 or smaller board
+                            SgfProp::W(sgf::props::Move::Move(point)) => {
+                                if point.x == 19
+                                    && point.y == 19
+                                    && ui.board_size().0 < 20
+                                    && ui.board_size().1 < 20
+                                {
+                                    continue; // "tt" pass
+                                }
                                 ui.play_stone(goban::Stone {
                                     x: point.x,
                                     y: point.y,
                                     color: goban::StoneColor::White,
-                                }).unwrap(); // TODO
+                                })
+                                .unwrap(); // TODO
                             }
-                            sgf::SgfProp::AB(points) => {
+                            SgfProp::AB(points) => {
                                 for point in points.iter() {
                                     ui.add_stone(goban::Stone {
                                         x: point.x,
                                         y: point.y,
                                         color: goban::StoneColor::Black,
-                                    }).unwrap(); // TODO
+                                    })
+                                    .unwrap(); // TODO
                                 }
                             }
-                            sgf::SgfProp::AW(points) => {
+                            SgfProp::AW(points) => {
                                 for point in points.iter() {
                                     ui.add_stone(goban::Stone {
                                         x: point.x,
                                         y: point.y,
                                         color: goban::StoneColor::White,
-                                    }).unwrap(); // TODO
+                                    })
+                                    .unwrap(); // TODO
                                 }
                             }
-                            sgf::SgfProp::AE(points) => {
+                            SgfProp::AE(points) => {
                                 for point in points.iter() {
                                     ui.clear_point((point.x, point.y));
                                 }
                             }
-                            sgf::SgfProp::MN(num) => ui.set_move_number(*num as u64),
+                            SgfProp::MN(num) => ui.set_move_number(*num as u64),
                             _ => {}
                         }
                     }

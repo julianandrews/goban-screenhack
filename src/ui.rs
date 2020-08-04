@@ -36,4 +36,8 @@ impl UI {
     pub fn set_move_number(&mut self, num: u64) {
         self.goban.set_move_number(num);
     }
+
+    pub fn board_size(&self) -> (u8, u8) {
+        self.goban.size
+    }
 }

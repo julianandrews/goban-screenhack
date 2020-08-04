@@ -12,6 +12,12 @@ pub struct Point {
     pub y: u8,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum Move {
+    Pass,
+    Move(Point),
+}
+
 #[derive(Clone, Debug)]
 pub struct Text(String);
 
@@ -37,10 +43,10 @@ impl std::ops::Deref for SimpleText {
 #[derive(Clone, Debug)]
 pub enum SgfProp {
     // Move Properties
-    B(Point),
+    B(Move),
     KO,
     MN(i64),
-    W(Point),
+    W(Move),
     // Setup Properties (illegal to place two colors on one point)
     AB(Vec<Point>),
     AE(Vec<Point>),
@@ -117,10 +123,10 @@ pub enum SgfProp {
 impl SgfProp {
     pub fn new(ident: String, values: Vec<String>) -> Result<SgfProp, SgfParseError> {
         match &ident[..] {
-            "B" => Ok(SgfProp::B(parse_single_value(&values)?)), // TODO: Handle pass (empty property)
+            "B" => Ok(SgfProp::B(parse_single_value(&values)?)),
             "KO" => verify_empty(&values).map(|()| Ok(SgfProp::KO))?,
             "MN" => Ok(SgfProp::MN(parse_single_value(&values)?)),
-            "W" => Ok(SgfProp::W(parse_single_value(&values)?)), // TODO: Handle pass (empty property)
+            "W" => Ok(SgfProp::W(parse_single_value(&values)?)),
             "AB" => Ok(SgfProp::AB(parse_list_point(&values)?)),
             "AE" => Ok(SgfProp::AE(parse_list_point(&values)?)),
             "AW" => Ok(SgfProp::AW(parse_list_point(&values)?)),
@@ -260,6 +266,17 @@ fn parse_size(values: &Vec<String>) -> Result<(u8, u8), SgfParseError> {
         Ok((width, height))
     } else {
         Err(SgfParseError::InvalidPropertyValue)?
+    }
+}
+
+impl std::str::FromStr for Move {
+    type Err = SgfParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "" => Ok(Move::Pass),
+            _ => Ok(Move::Move(s.parse()?)),
+        }
     }
 }
 

@@ -15,7 +15,6 @@ pub fn parse(text: &str) -> Result<Vec<SgfNode>, SgfParseError> {
     }
 
     // TODO: validate root properties
-    // TODO: validate
     Ok(nodes)
 }
 
