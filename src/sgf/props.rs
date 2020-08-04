@@ -1,18 +1,20 @@
+use std::collections::HashSet;
+
 use super::SgfParseError;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Double {
     One,
     Two,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Point {
     pub x: u8,
     pub y: u8,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Move {
     Pass,
     Move(Point),
@@ -246,10 +248,36 @@ fn parse_list_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
 }
 
 fn parse_elist_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
-    // TODO: Handle compressed list of points.
-    // TODO: Validate the points are unique.
-    //       All props using point lists require this except DD. That feels like an oversight.
-    values.iter().map(|v| v.parse()).collect()
+    let mut points = HashSet::new();
+    for value in values.iter() {
+        let parts: Vec<&str> = value.split(":").collect();
+        if parts.len() == 1 {
+            let point = parts[0].parse()?;
+            if points.contains(&point) {
+                Err(SgfParseError::InvalidPropertyValue)?;
+            }
+            points.insert(point);
+        } else if parts.len() == 2 {
+            let upper_left: Point = parts[0].parse()?;
+            let lower_right: Point = parts[1].parse()?;
+            if upper_left.x > lower_right.x || upper_left.y > lower_right.y {
+                Err(SgfParseError::InvalidPropertyValue)?;
+            }
+            for x in upper_left.x..lower_right.x {
+                for y in upper_left.y..lower_right.y {
+                    let point = Point{ x: x, y: y };
+                    if points.contains(&point) {
+                        Err(SgfParseError::InvalidPropertyValue)?;
+                    }
+                    points.insert(point);
+                }
+            }
+        } else {
+            Err(SgfParseError::InvalidPropertyValue)?
+        }
+    }
+
+    Ok(points.into_iter().collect())
 }
 
 fn parse_size(values: &Vec<String>) -> Result<(u8, u8), SgfParseError> {
