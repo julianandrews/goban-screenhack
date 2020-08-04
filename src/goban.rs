@@ -81,6 +81,10 @@ impl Goban {
         self.stones.remove(&point);
     }
 
+    pub fn set_move_number(&mut self, num: u64) {
+        self.move_number = num;
+    }
+
     fn neighbors(&self, point: (u8, u8)) -> impl Iterator<Item = (u8, u8)> {
         let (x, y) = point;
         let mut neighbors = vec![];

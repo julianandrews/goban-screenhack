@@ -11,7 +11,7 @@ pub fn parse(text: &str) -> Result<Vec<SgfNode>, SgfParseError> {
         text = new_text.trim();
     }
     if nodes.is_empty() {
-        Err(SgfParseError::InvalidGameTree)?;
+        Err(SgfParseError::InvalidGameTree(text.to_string()))?;
     }
 
     // TODO: validate root properties
@@ -21,13 +21,13 @@ pub fn parse(text: &str) -> Result<Vec<SgfNode>, SgfParseError> {
 
 fn parse_game_tree(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
     if text.chars().next() != Some('(') {
-        Err(SgfParseError::InvalidGameTree)?;
+        Err(SgfParseError::InvalidGameTree(text.to_string()))?;
     }
     text = &text[1..].trim();
     let (node, new_text) = parse_node(text)?;
     text = &new_text.trim();
     if text.chars().next() != Some(')') {
-        Err(SgfParseError::InvalidGameTree)?;
+        Err(SgfParseError::InvalidGameTree(text.to_string()))?;
     }
 
     Ok((node, &text[1..]))
@@ -35,7 +35,7 @@ fn parse_game_tree(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
 
 fn parse_node(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
     if text.chars().next() != Some(';') {
-        Err(SgfParseError::InvalidNode)?;
+        Err(SgfParseError::InvalidNode(text.to_string()))?;
     }
     text = &text[1..].trim();
 
@@ -44,11 +44,10 @@ fn parse_node(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
         if !c.is_ascii_uppercase() {
             break;
         }
-        let (prop_ident, new_text) = parse_prop_ident(text)?;
-        text = &new_text;
-        let (prop_values, new_text) = parse_prop_values(text)?;
-        text = &new_text;
-        props.push(SgfProp::new(prop_ident, prop_values)?);
+        let (prop, new_text) =
+            parse_property(text).map_err(|_| SgfParseError::InvalidProperty(text.to_string()))?;
+        text = new_text;
+        props.push(prop);
     }
 
     text = &text.trim();
@@ -79,6 +78,15 @@ fn parse_node(mut text: &str) -> Result<(SgfNode, &str), SgfParseError> {
     ))
 }
 
+fn parse_property(mut text: &str) -> Result<(SgfProp, &str), SgfParseError> {
+    let (prop_ident, new_text) = parse_prop_ident(text)?;
+    text = &new_text;
+    let (prop_values, new_text) = parse_prop_values(text)?;
+    text = &new_text;
+
+    Ok((SgfProp::new(prop_ident, prop_values)?, text))
+}
+
 fn parse_prop_ident(mut text: &str) -> Result<(String, &str), SgfParseError> {
     let mut prop_ident = vec![];
     loop {
@@ -88,7 +96,7 @@ fn parse_prop_ident(mut text: &str) -> Result<(String, &str), SgfParseError> {
                 prop_ident.push(c);
                 text = &text[1..];
             }
-            _ => Err(SgfParseError::InvalidProperty)?,
+            _ => Err(SgfParseError::InvalidProperty(text.to_string()))?,
         }
     }
 
@@ -126,7 +134,7 @@ fn parse_value(text: &str) -> Result<(String, &str), SgfParseError> {
                 escaped = false;
                 prop_value.push(c);
             }
-            None => Err(SgfParseError::InvalidProperty)?,
+            None => Err(SgfParseError::InvalidProperty(text.to_string()))?,
         }
     }
 

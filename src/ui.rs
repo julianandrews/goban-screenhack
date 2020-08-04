@@ -29,8 +29,11 @@ impl UI {
         self.goban.clear_point(point);
     }
 
-
     pub fn reset(&mut self, board_size: (u8, u8)) {
         self.goban = goban::Goban::new(board_size);
+    }
+
+    pub fn set_move_number(&mut self, num: u64) {
+        self.goban.set_move_number(num);
     }
 }

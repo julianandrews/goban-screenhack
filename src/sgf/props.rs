@@ -117,10 +117,10 @@ pub enum SgfProp {
 impl SgfProp {
     pub fn new(ident: String, values: Vec<String>) -> Result<SgfProp, SgfParseError> {
         match &ident[..] {
-            "B" => Ok(SgfProp::B(parse_single_value(&values)?)),
+            "B" => Ok(SgfProp::B(parse_single_value(&values)?)), // TODO: Handle pass (empty property)
             "KO" => verify_empty(&values).map(|()| Ok(SgfProp::KO))?,
             "MN" => Ok(SgfProp::MN(parse_single_value(&values)?)),
-            "W" => Ok(SgfProp::W(parse_single_value(&values)?)),
+            "W" => Ok(SgfProp::W(parse_single_value(&values)?)), // TODO: Handle pass (empty property)
             "AB" => Ok(SgfProp::AB(parse_list_point(&values)?)),
             "AE" => Ok(SgfProp::AE(parse_list_point(&values)?)),
             "AW" => Ok(SgfProp::AW(parse_list_point(&values)?)),
@@ -146,7 +146,7 @@ impl SgfProp {
             "FF" => {
                 let value = parse_single_value(&values)?;
                 if value < 0 || value > 4 {
-                    Err(SgfParseError::InvalidProperty)?;
+                    Err(SgfParseError::InvalidPropertyValue)?;
                 }
                 Ok(SgfProp::FF(value))
             }
@@ -154,14 +154,14 @@ impl SgfProp {
                 let value = parse_single_value(&values)?;
                 // Only Go is supported
                 if value != 1 {
-                    Err(SgfParseError::InvalidProperty)?;
+                    Err(SgfParseError::InvalidPropertyValue)?;
                 }
                 Ok(SgfProp::GM(value))
             }
             "ST" => {
                 let value = parse_single_value(&values)?;
                 if value < 0 || value > 3 {
-                    Err(SgfParseError::InvalidProperty)?;
+                    Err(SgfParseError::InvalidPropertyValue)?;
                 }
                 Ok(SgfProp::ST(value))
             }
@@ -169,7 +169,7 @@ impl SgfProp {
             "HA" => {
                 let value: i64 = parse_single_value(&values)?;
                 if !value >= 2 {
-                    Err(SgfParseError::InvalidProperty)?;
+                    Err(SgfParseError::InvalidPropertyValue)?;
                 }
                 Ok(SgfProp::HA(value))
             }
@@ -202,7 +202,7 @@ impl SgfProp {
             "PM" => {
                 let value = parse_single_value(&values)?;
                 if value < 1 || value > 2 {
-                    Err(SgfParseError::InvalidProperty)?;
+                    Err(SgfParseError::InvalidPropertyValue)?;
                 }
                 Ok(SgfProp::PM(value))
             }
@@ -215,25 +215,25 @@ impl SgfProp {
 }
 
 fn verify_empty(values: &Vec<String>) -> Result<(), SgfParseError> {
-    if !values.is_empty() {
-        Err(SgfParseError::InvalidProperty)?;
+    if !(values.len() == 0 || (values.len() == 1 && values[0].is_empty())) {
+        Err(SgfParseError::InvalidPropertyValue)?;
     }
     Ok(())
 }
 
 fn parse_single_value<T: std::str::FromStr>(values: &Vec<String>) -> Result<T, SgfParseError> {
     if values.len() != 1 {
-        Err(SgfParseError::InvalidProperty)?;
+        Err(SgfParseError::InvalidPropertyValue)?;
     }
     values[0]
         .parse()
-        .map_err(|_| SgfParseError::InvalidProperty)
+        .map_err(|_| SgfParseError::InvalidPropertyValue)
 }
 
 fn parse_list_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> {
     let points = parse_elist_point(values)?;
     if points.is_empty() {
-        Err(SgfParseError::InvalidProperty)?;
+        Err(SgfParseError::InvalidPropertyValue)?;
     }
 
     Ok(points)
@@ -248,18 +248,18 @@ fn parse_elist_point(values: &Vec<String>) -> Result<Vec<Point>, SgfParseError> 
 
 fn parse_size(values: &Vec<String>) -> Result<(u8, u8), SgfParseError> {
     if values.len() != 1 {
-        Err(SgfParseError::InvalidProperty)?;
+        Err(SgfParseError::InvalidPropertyValue)?;
     }
     let parts: Vec<&str> = values[0].split(":").collect();
     if parts.len() == 1 {
-        let size = parts[0].parse().map_err(|_| SgfParseError::InvalidProperty)?;
+        let size = parts[0].parse().map_err(|_| SgfParseError::InvalidPropertyValue)?;
         Ok((size, size))
     } else if parts.len() == 2 {
-        let width = parts[0].parse().map_err(|_| SgfParseError::InvalidProperty)?;
-        let height = parts[1].parse().map_err(|_| SgfParseError::InvalidProperty)?;
+        let width = parts[0].parse().map_err(|_| SgfParseError::InvalidPropertyValue)?;
+        let height = parts[1].parse().map_err(|_| SgfParseError::InvalidPropertyValue)?;
         Ok((width, height))
     } else {
-        Err(SgfParseError::InvalidProperty)?
+        Err(SgfParseError::InvalidPropertyValue)?
     }
 }
 
@@ -269,7 +269,7 @@ impl std::str::FromStr for Point {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let chars: Vec<char> = s.chars().collect();
         if chars.len() != 2 {
-            return Err(SgfParseError::InvalidProperty);
+            return Err(SgfParseError::InvalidPropertyValue);
         }
 
         fn map_char(c: char) -> Result<u8, SgfParseError> {
@@ -278,7 +278,7 @@ impl std::str::FromStr for Point {
             } else if c.is_ascii_uppercase() {
                 Ok(c as u8 - 'A' as u8)
             } else {
-                Err(SgfParseError::InvalidProperty)
+                Err(SgfParseError::InvalidPropertyValue)
             }
         }
 
@@ -314,7 +314,7 @@ impl std::str::FromStr for Double {
         } else if s == "2" {
             Ok(Double::Two)
         } else {
-            Err(SgfParseError::InvalidProperty)
+            Err(SgfParseError::InvalidPropertyValue)
         }
     }
 }

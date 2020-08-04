@@ -29,10 +29,10 @@ fn load_sgfs(
             if path.is_file() {
                 match path.extension().and_then(std::ffi::OsStr::to_str) {
                     Some("sgf") => {
-                        let contents = std::fs::read_to_string(path)?;
+                        let contents = std::fs::read_to_string(path.clone())?;
                         match sgf::parse(&contents) {
                             Ok(new_nodes) => sgfs.extend(new_nodes),
-                            Err(e) => eprintln!("{}", e),
+                            Err(e) => eprintln!("Error parsing {}: {}", path.to_str().unwrap(), e),
                         }
                     }
                     _ => {}
@@ -94,7 +94,7 @@ fn main() {
         }
     };
     if sgfs.is_empty() {
-        eprintln!("No sgf files found");
+        eprintln!("No valid sgf files found.");
         std::process::exit(1);
     }
     let mut rng = thread_rng();
@@ -122,8 +122,6 @@ fn main() {
             GameState::New => {
                 let board_size = sgf_node.get_size().unwrap_or((19, 19));
                 ui.reset(board_size);
-                // TODO: Handle other start properties
-
                 game_state = GameState::Ongoing;
             }
             GameState::Ongoing => {
@@ -131,6 +129,7 @@ fn main() {
                     for prop in sgf_node.properties.iter() {
                         match prop {
                             sgf::SgfProp::B(point) => {
+                                // TODO: handle "tt" pass on 19x19 or smaller board
                                 ui.play_stone(goban::Stone {
                                     x: point.x,
                                     y: point.y,
@@ -138,6 +137,7 @@ fn main() {
                                 }).unwrap(); // TODO
                             }
                             sgf::SgfProp::W(point) => {
+                                // TODO: handle "tt" pass on 19x19 or smaller board
                                 ui.play_stone(goban::Stone {
                                     x: point.x,
                                     y: point.y,
@@ -167,6 +167,7 @@ fn main() {
                                     ui.clear_point((point.x, point.y));
                                 }
                             }
+                            sgf::SgfProp::MN(num) => ui.set_move_number(*num as u64),
                             _ => {}
                         }
                     }
