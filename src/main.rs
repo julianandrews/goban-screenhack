@@ -11,7 +11,7 @@ mod xscreensaver_context;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use sgf_parse::props::SgfProp;
+use sgf_parse::SgfProp;
 use std::time::Duration;
 
 enum GameState {
@@ -121,7 +121,11 @@ fn main() {
         }
         match game_state {
             GameState::New => {
-                let board_size = sgf_node.get_size().unwrap_or((19, 19));
+                let board_size = match sgf_node.get_property("SZ") {
+                    Some(SgfProp::SZ(size)) => size.clone(),
+                    None => (19, 19),
+                    _ => unreachable!(),
+                };
                 ui.reset(board_size);
                 game_state = GameState::Ongoing;
             }
@@ -129,7 +133,7 @@ fn main() {
                 if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
                     for prop in sgf_node.properties() {
                         match prop {
-                            SgfProp::B(sgf_parse::props::Move::Move(point)) => {
+                            SgfProp::B(sgf_parse::Move::Move(point)) => {
                                 if point.x == 19
                                     && point.y == 19
                                     && ui.board_size().0 < 20
@@ -144,7 +148,7 @@ fn main() {
                                 })
                                 .unwrap(); // TODO
                             }
-                            SgfProp::W(sgf_parse::props::Move::Move(point)) => {
+                            SgfProp::W(sgf_parse::Move::Move(point)) => {
                                 if point.x == 19
                                     && point.y == 19
                                     && ui.board_size().0 < 20
