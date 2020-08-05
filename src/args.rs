@@ -6,7 +6,6 @@ use super::xscreensaver_context::WindowType;
 
 const DEFAULT_MOVE_DELAY: u64 = 5000;
 const DEFAULT_END_DELAY: u64 = 10000;
-const DEFAULT_SGF_DIR: &str = "/home/julian/sgfs"; // TODO
 
 #[derive(Debug)]
 pub struct GobanHackArgs {
@@ -97,7 +96,7 @@ pub fn build_opts() -> getopts::Options {
     opts.optmulti(
         "",
         "sgf-dir",
-        "Directory to search for sgf files. Multiple allowed. (default TODO)",
+        "Directory to search for sgf files. Multiple allowed.",
         "DIR",
     );
 
@@ -122,12 +121,16 @@ fn parse_flag_or_default<T: ::std::str::FromStr>(
 }
 
 pub fn parse_sgf_dirs(matches: &getopts::Matches) -> Vec<PathBuf> {
-    let mut sgf_dirs = matches.opt_strs("sgf-dir");
+    let sgf_dirs: Vec<_> = matches
+        .opt_strs("sgf-dir")
+        .iter()
+        .map(PathBuf::from)
+        .collect();
     if sgf_dirs.len() == 0 {
-        sgf_dirs.push(DEFAULT_SGF_DIR.to_string());
+        get_default_sgf_dir().into_iter().collect()
+    } else {
+        sgf_dirs
     }
-
-    sgf_dirs.iter().map(PathBuf::from).collect()
 }
 
 pub fn parse_window_type(matches: &getopts::Matches) -> Result<WindowType, UsageError> {
@@ -173,4 +176,32 @@ fn parse_window_id(window_id_string: &str) -> Result<u64, std::num::ParseIntErro
     } else {
         u64::from_str_radix(&window_id_string, 10)
     }
+}
+
+fn get_default_sgf_dir() -> Option<PathBuf> {
+    let xdg_data_home: PathBuf = {
+        match std::env::var("XDG_DATA_HOME").ok().map(PathBuf::from) {
+            Some(path) => path,
+            None => {
+                let mut path = PathBuf::from(std::env::var("HOME").unwrap_or("".to_string()));
+                path.push(".local/share");
+
+                path
+            }
+        }
+    };
+    let xdg_data_dirs: Vec<PathBuf> = std::env::var("XDG_DATA_DIRS")
+        .unwrap_or("/usr/local/share:/usr/share".to_string())
+        .split(":")
+        .map(PathBuf::from)
+        .collect();
+    std::iter::once(xdg_data_home)
+        .chain(xdg_data_dirs.into_iter())
+        .map(|mut path| {
+            path.push("goban-screenhack");
+            println!("{:?}", path);
+            path
+        })
+        .filter(|path| path.exists())
+        .next()
 }
