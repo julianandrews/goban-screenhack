@@ -40,8 +40,7 @@ impl XScreensaverContext {
                     glutin::window::WindowBuilder::new().with_title("Goban Screenhack");
                 let (context, window) = unsafe {
                     context_builder
-                        .build_windowed(window_builder, &event_loop)
-                        .unwrap()
+                        .build_windowed(window_builder, &event_loop)?
                         .split()
                 };
                 let window = WindowWrapper::GlutinWindow { window };

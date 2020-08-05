@@ -33,7 +33,7 @@ fn load_sgfs(
                         let contents = std::fs::read_to_string(path.clone())?;
                         match sgf_parse::parse(&contents) {
                             Ok(new_nodes) => sgfs.extend(new_nodes),
-                            Err(e) => eprintln!("Error parsing {}: {}", path.to_str().unwrap(), e),
+                            Err(e) => eprintln!("Error parsing {}: {}", path.to_string_lossy(), e),
                         }
                     }
                     _ => {}
@@ -141,12 +141,15 @@ fn main() {
                                 {
                                     continue; // "tt" pass
                                 }
-                                ui.play_stone(goban::Stone {
+                                let stone = goban::Stone {
                                     x: point.x,
                                     y: point.y,
                                     color: goban::StoneColor::Black,
-                                })
-                                .unwrap(); // TODO
+                                };
+                                if let Err(error) = ui.play_stone(stone) {
+                                    eprintln!("{}", error);
+                                    std::process::exit(1);
+                                }
                             }
                             SgfProp::W(sgf_parse::Move::Move(point)) => {
                                 if point.x == 19
@@ -156,31 +159,40 @@ fn main() {
                                 {
                                     continue; // "tt" pass
                                 }
-                                ui.play_stone(goban::Stone {
+                                let stone = goban::Stone {
                                     x: point.x,
                                     y: point.y,
                                     color: goban::StoneColor::White,
-                                })
-                                .unwrap(); // TODO
+                                };
+                                if let Err(error) = ui.play_stone(stone) {
+                                    eprintln!("{}", error);
+                                    std::process::exit(1);
+                                }
                             }
                             SgfProp::AB(points) => {
                                 for point in points.iter() {
-                                    ui.add_stone(goban::Stone {
+                                    let stone = goban::Stone {
                                         x: point.x,
                                         y: point.y,
                                         color: goban::StoneColor::Black,
-                                    })
-                                    .unwrap(); // TODO
+                                    };
+                                    if let Err(error) = ui.add_stone(stone) {
+                                        eprintln!("{}", error);
+                                        std::process::exit(1);
+                                    }
                                 }
                             }
                             SgfProp::AW(points) => {
                                 for point in points.iter() {
-                                    ui.add_stone(goban::Stone {
+                                    let stone = goban::Stone {
                                         x: point.x,
                                         y: point.y,
                                         color: goban::StoneColor::White,
-                                    })
-                                    .unwrap(); // TODO
+                                    };
+                                    if let Err(error) = ui.add_stone(stone) {
+                                        eprintln!("{}", error);
+                                        std::process::exit(1);
+                                    }
                                 }
                             }
                             SgfProp::AE(points) => {
@@ -211,9 +223,21 @@ fn main() {
             }
         }
 
-        let physical_size = xs.inner_size().unwrap(); // TODO
+        let physical_size = match xs.inner_size() {
+            Ok(physical_size) => physical_size,
+            Err(error) => {
+                eprintln!("{}", error);
+                std::process::exit(1);
+            }
+        };
         let (width, height) = (physical_size.width, physical_size.height);
-        let scale_factor = xs.scale_factor().unwrap(); // TODO
+        let scale_factor = match xs.scale_factor() {
+            Ok(scale_factor) => scale_factor,
+            Err(error) => {
+                eprintln!("{}", error);
+                std::process::exit(1);
+            }
+        };
 
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);
