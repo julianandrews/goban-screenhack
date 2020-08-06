@@ -19,3 +19,9 @@ sgf-parse = "~0.2"
 [dependencies.nanovg]
 version = "1.0.2"
 features = ["gl3"]
+
+[package.metadata.deb]
+assets = [
+    ["target/release/goban", "usr/lib/xscreensaver/", "755"],
+    ["config/goban.xml", "/usr/share/xscreensaver/config/", "644"],
+]
