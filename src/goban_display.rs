@@ -5,7 +5,7 @@ pub struct GobanDisplay<'a> {
 }
 
 impl<'a> GobanDisplay<'a> {
-    // TODO: Line color, board color as constants
+    const BOARD_COLOR: (f32, f32, f32) = (0.9, 0.73, 0.37);
     const LINE_WIDTH: f32 = 1.0 / 22.0;
     const BORDER_WIDTH: f32 = 1.0 / 11.0;
     const BOARD_MARGIN: f32 = 14.1 / 22.0;
@@ -51,7 +51,12 @@ impl<'a> GobanDisplay<'a> {
         // Draw the board itself.
         frame.path(
             |path| {
-                let board_color: nanovg::Color = nanovg::Color::new(0.9, 0.73, 0.37, 1.0);
+                let board_color = nanovg::Color::new(
+                    GobanDisplay::BOARD_COLOR.0,
+                    GobanDisplay::BOARD_COLOR.1,
+                    GobanDisplay::BOARD_COLOR.2,
+                    1.0,
+                );
                 path.rect((0.0, 0.0), (board_width, board_height));
                 path.fill(board_color, Default::default());
             },
@@ -61,11 +66,12 @@ impl<'a> GobanDisplay<'a> {
             },
         );
 
-        // Now move the origin to (0, 0), and draw the lines and stone.
+        // Now move the origin to (0, 0), and draw the lines and stones.
         let transform = transform.translate(GobanDisplay::BOARD_MARGIN, GobanDisplay::BOARD_MARGIN);
         frame.transformed(transform, |frame| self.draw_board(&frame));
     }
 
+    // Draw the board, assuming the spacing between lines is 1.0.
     fn draw_board(&self, frame: &nanovg::Frame) {
         let line_color: nanovg::Color = nanovg::Color::new(0.0, 0.0, 0.0, 1.0);
         let border_options = nanovg::StrokeOptions {
@@ -118,6 +124,7 @@ impl<'a> GobanDisplay<'a> {
         }
     }
 
+    // Draw a stone centered at 0.0 assuming interline spacing of 1.0.
     fn draw_stone(&self, frame: &nanovg::Frame, stone: goban::Stone) {
         frame.path(
             |path| {
