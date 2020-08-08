@@ -34,7 +34,7 @@ fn main() {
     ) {
         Ok(xs) => xs,
         Err(e) => {
-            eprintln!("Creationg of XScreensaver Context failed: {}", e);
+            eprintln!("Creation of XScreensaver Context failed: {}", e);
             std::process::exit(1);
         }
     };
