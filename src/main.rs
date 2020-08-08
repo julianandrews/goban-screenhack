@@ -9,42 +9,6 @@ mod goban_display;
 mod ui;
 mod xscreensaver_context;
 
-use rand::seq::SliceRandom;
-use rand::thread_rng;
-use sgf_parse::SgfProp;
-use std::time::Duration;
-
-enum GameState {
-    New,
-    Ongoing,
-    Ended,
-}
-
-fn load_sgfs(
-    sgf_dirs: &Vec<std::path::PathBuf>,
-) -> Result<Vec<sgf_parse::SgfNode>, Box<dyn std::error::Error>> {
-    let mut sgfs = vec![];
-    for dir in sgf_dirs.iter() {
-        for entry in std::fs::read_dir(&dir)? {
-            let path = entry?.path();
-            if path.is_file() {
-                match path.extension().and_then(std::ffi::OsStr::to_str) {
-                    Some("sgf") => {
-                        let contents = std::fs::read_to_string(path.clone())?;
-                        match sgf_parse::parse(&contents) {
-                            Ok(new_nodes) => sgfs.extend(new_nodes),
-                            Err(e) => eprintln!("Error parsing {}: {}", path.to_string_lossy(), e),
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-
-    Ok(sgfs)
-}
-
 fn main() {
     // Parse arguments
     let args: Vec<String> = std::env::args().collect();
@@ -94,15 +58,13 @@ fn main() {
             std::process::exit(1);
         }
     };
-    if sgfs.is_empty() {
-        eprintln!("No valid sgf files found.");
-        std::process::exit(1);
-    }
-    let mut rng = thread_rng();
-    let mut sgf_node = sgfs.choose(&mut rng).unwrap().clone(); // sgfs is never empty
-    let mut game_state = GameState::New;
-    let mut last_action_time = std::time::Instant::now();
-    let mut ui = ui::UI::new();
+    let mut ui = match ui::UI::new(sgfs, parsed_args.move_delay, parsed_args.end_delay) {
+        Ok(ui) => ui,
+        Err(error) => {
+            eprintln!("{}", error);
+            std::process::exit(1);
+        }
+    };
 
     // Main Loop
     event_loop.run(move |event, _, control_flow| {
@@ -119,120 +81,14 @@ fn main() {
             },
             _ => (),
         }
-        match game_state {
-            GameState::New => {
-                let board_size = match sgf_node.get_property("SZ") {
-                    Some(SgfProp::SZ(size)) => size.clone(),
-                    None => (19, 19),
-                    _ => unreachable!(),
-                };
-                ui.reset(board_size);
-                game_state = GameState::Ongoing;
-            }
-            GameState::Ongoing => {
-                if last_action_time.elapsed() > Duration::from_millis(parsed_args.move_delay) {
-                    for prop in sgf_node.properties() {
-                        match prop {
-                            SgfProp::B(sgf_parse::Move::Move(point)) => {
-                                if point.x == 19
-                                    && point.y == 19
-                                    && ui.board_size().0 < 20
-                                    && ui.board_size().1 < 20
-                                {
-                                    continue; // "tt" pass
-                                }
-                                let stone = goban::Stone {
-                                    x: point.x,
-                                    y: point.y,
-                                    color: goban::StoneColor::Black,
-                                };
-                                if let Err(error) = ui.play_stone(stone) {
-                                    eprintln!("{}", error);
-                                    std::process::exit(1);
-                                }
-                            }
-                            SgfProp::W(sgf_parse::Move::Move(point)) => {
-                                if point.x == 19
-                                    && point.y == 19
-                                    && ui.board_size().0 < 20
-                                    && ui.board_size().1 < 20
-                                {
-                                    continue; // "tt" pass
-                                }
-                                let stone = goban::Stone {
-                                    x: point.x,
-                                    y: point.y,
-                                    color: goban::StoneColor::White,
-                                };
-                                if let Err(error) = ui.play_stone(stone) {
-                                    eprintln!("{}", error);
-                                    std::process::exit(1);
-                                }
-                            }
-                            SgfProp::AB(points) => {
-                                for point in points.iter() {
-                                    let stone = goban::Stone {
-                                        x: point.x,
-                                        y: point.y,
-                                        color: goban::StoneColor::Black,
-                                    };
-                                    if let Err(error) = ui.add_stone(stone) {
-                                        eprintln!("{}", error);
-                                        std::process::exit(1);
-                                    }
-                                }
-                            }
-                            SgfProp::AW(points) => {
-                                for point in points.iter() {
-                                    let stone = goban::Stone {
-                                        x: point.x,
-                                        y: point.y,
-                                        color: goban::StoneColor::White,
-                                    };
-                                    if let Err(error) = ui.add_stone(stone) {
-                                        eprintln!("{}", error);
-                                        std::process::exit(1);
-                                    }
-                                }
-                            }
-                            SgfProp::AE(points) => {
-                                for point in points.iter() {
-                                    ui.clear_point((point.x, point.y));
-                                }
-                            }
-                            SgfProp::MN(num) => ui.set_move_number(*num as u64),
-                            _ => {}
-                        }
-                    }
-                    // TODO: avoid these stupid clones
-                    sgf_node = match sgf_node.clone().into_iter().next() {
-                        None => {
-                            game_state = GameState::Ended;
-                            sgfs.choose(&mut rng).unwrap().clone() // sgfs is never empty
-                        }
-                        Some(node) => node,
-                    };
-                    last_action_time = std::time::Instant::now();
-                }
-            }
-            GameState::Ended => {
-                if last_action_time.elapsed() > Duration::from_millis(parsed_args.end_delay) {
-                    game_state = GameState::New;
-                    last_action_time = std::time::Instant::now();
-                }
-            }
+
+        if let Err(error) = ui.update_game_state() {
+            eprintln!("{}", error);
+            std::process::exit(1);
         }
 
-        let physical_size = match xs.inner_size() {
-            Ok(physical_size) => physical_size,
-            Err(error) => {
-                eprintln!("{}", error);
-                std::process::exit(1);
-            }
-        };
-        let (width, height) = (physical_size.width, physical_size.height);
-        let scale_factor = match xs.scale_factor() {
-            Ok(scale_factor) => scale_factor,
+        let (width, height, scale_factor) = match get_geometry(&xs) {
+            Ok(values) => values,
             Err(error) => {
                 eprintln!("{}", error);
                 std::process::exit(1);
@@ -245,10 +101,43 @@ fn main() {
         }
 
         let (width, height) = (width as f32, height as f32);
-
         nanovg_context.frame((width, height), scale_factor as f32, |mut frame| {
             ui.draw(&mut frame, width, height);
         });
         xs.context().swap_buffers().unwrap();
     });
+}
+
+fn load_sgfs(
+    sgf_dirs: &Vec<std::path::PathBuf>,
+) -> Result<Vec<sgf_parse::SgfNode>, Box<dyn std::error::Error>> {
+    let mut sgfs = vec![];
+    for dir in sgf_dirs.iter() {
+        for entry in std::fs::read_dir(&dir)? {
+            let path = entry?.path();
+            if path.is_file() {
+                match path.extension().and_then(std::ffi::OsStr::to_str) {
+                    Some("sgf") => {
+                        let contents = std::fs::read_to_string(path.clone())?;
+                        match sgf_parse::parse(&contents) {
+                            Ok(new_nodes) => sgfs.extend(new_nodes),
+                            Err(e) => eprintln!("Error parsing {}: {}", path.to_string_lossy(), e),
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    Ok(sgfs)
+}
+
+fn get_geometry(
+    xs: &xscreensaver_context::XScreensaverContext,
+) -> Result<(u32, u32, f64), Box<dyn std::error::Error>> {
+    let physical_size = xs.inner_size()?;
+    let (width, height) = (physical_size.width, physical_size.height);
+    let scale_factor = xs.scale_factor()?;
+    Ok((width, height, scale_factor))
 }
