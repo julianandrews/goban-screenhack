@@ -13,6 +13,7 @@ pub struct GobanHackArgs {
     pub sgf_dirs: Vec<PathBuf>,
     pub move_delay: u64,
     pub end_delay: u64,
+    pub annotations: bool,
     pub print_help: bool,
 }
 
@@ -51,6 +52,7 @@ pub fn parse_args(
     let sgf_dirs = parse_sgf_dirs(&matches);
     let move_delay = parse_flag_or_default(&matches, "move-delay", DEFAULT_MOVE_DELAY)?;
     let end_delay = parse_flag_or_default(&matches, "end-delay", DEFAULT_END_DELAY)?;
+    let annotations = matches.opt_present("annotations");
     let print_help = matches.opt_present("h");
 
     Ok(GobanHackArgs {
@@ -58,6 +60,7 @@ pub fn parse_args(
         sgf_dirs: sgf_dirs,
         move_delay: move_delay,
         end_delay: end_delay,
+        annotations: annotations,
         print_help: print_help,
     })
 }
@@ -99,6 +102,7 @@ pub fn build_opts() -> getopts::Options {
         "Directory to search for sgf files. Multiple allowed.",
         "DIR",
     );
+    opts.optflag("", "annotations", "Display annotations",);
 
     opts
 }
