@@ -5,7 +5,6 @@ extern crate sgf_parse;
 
 mod args;
 mod goban;
-mod goban_display;
 mod ui;
 mod xscreensaver_context;
 

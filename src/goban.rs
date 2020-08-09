@@ -8,19 +8,6 @@ pub struct Goban {
     pub white_captures: u64,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum StoneColor {
-    Black,
-    White,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Stone {
-    pub x: u8,
-    pub y: u8,
-    pub color: StoneColor,
-}
-
 impl Goban {
     pub fn new(board_size: (u8, u8)) -> Goban {
         Goban {
@@ -131,6 +118,29 @@ impl Goban {
         }
         for stone in group {
             self.stones.remove(&stone);
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum StoneColor {
+    Black,
+    White,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Stone {
+    pub x: u8,
+    pub y: u8,
+    pub color: StoneColor,
+}
+
+impl Stone {
+    pub fn new(x: u8, y: u8, color: StoneColor) -> Stone {
+        Stone {
+            x: x,
+            y: y,
+            color: color,
         }
     }
 }

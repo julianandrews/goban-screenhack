@@ -1,7 +1,7 @@
-use super::goban;
+use super::{Goban, Stone, StoneColor};
 
 pub struct GobanDisplay<'a> {
-    goban: &'a goban::Goban,
+    goban: &'a Goban,
 }
 
 impl<'a> GobanDisplay<'a> {
@@ -25,7 +25,7 @@ impl<'a> GobanDisplay<'a> {
         (15, 15),
     ];
 
-    pub fn new(goban: &'a goban::Goban) -> GobanDisplay<'a> {
+    pub fn new(goban: &'a Goban) -> GobanDisplay<'a> {
         GobanDisplay { goban: goban }
     }
 
@@ -125,7 +125,7 @@ impl<'a> GobanDisplay<'a> {
     }
 
     // Draw a stone centered at 0.0 assuming interline spacing of 1.0.
-    fn draw_stone(&self, frame: &nanovg::Frame, stone: goban::Stone) {
+    fn draw_stone(&self, frame: &nanovg::Frame, stone: Stone) {
         frame.path(
             |path| {
                 path.circle((0.025, 0.025), 0.475);
@@ -137,14 +137,14 @@ impl<'a> GobanDisplay<'a> {
             },
         );
         let paint = match stone.color {
-            goban::StoneColor::Black => nanovg::Gradient::Radial {
+            StoneColor::Black => nanovg::Gradient::Radial {
                 center: (-0.17, -0.2),
                 inner_radius: 0.0,
                 outer_radius: 1.0,
                 start_color: nanovg::Color::new(0.25, 0.25, 0.25, 1.0),
                 end_color: nanovg::Color::new(0.0, 0.0, 0.0, 1.0),
             },
-            goban::StoneColor::White => nanovg::Gradient::Radial {
+            StoneColor::White => nanovg::Gradient::Radial {
                 center: (-0.17, -0.2),
                 inner_radius: 0.0,
                 outer_radius: 1.0,
