@@ -21,7 +21,7 @@ getopts = "~0.2"
 glutin = "~0.24"
 gl = "~0.14"
 rand = "~0.7"
-sgf-parse = "~0.2"
+sgf-parse = "~0.3"
 
 [dependencies.nanovg]
 version = "1.0.2"

@@ -856,9 +856,9 @@ checksum = "5317f7588f0a5078ee60ef675ef96735a1442132dc645eb1d12c018620ed8cd3"
 
 [[package]]
 name = "sgf-parse"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23a76d1a4b23e478a0eee3abbf35f4532f69da2d7cecb190183c35cb5f38370a"
+checksum = "8753d0052e1539c97d6bfd90ae40e30a7c8a7c2846602a3fce683d80a5a90d67"
 
 [[package]]
 name = "shared_library"
