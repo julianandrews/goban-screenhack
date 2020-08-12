@@ -29,21 +29,21 @@ impl<'a> GobanDisplay<'a> {
         GobanDisplay { goban: goban }
     }
 
-    pub fn draw(&self, frame: &mut nanovg::Frame, window_width: f32, window_height: f32) {
+    pub fn draw(&self, frame: &mut nanovg::Frame, width: f32, height: f32) {
         // Transform to a frame where the spacing between lines is 1.0 and the origin is in the
         // upper right corner of the board drawing area.
         let board_width = (self.goban.size.0 - 1) as f32 + 2.0 * GobanDisplay::BOARD_MARGIN;
         let board_height = (self.goban.size.1 - 1) as f32 + 2.0 * GobanDisplay::BOARD_MARGIN;
         let aspect_ratio = board_width / board_height;
-        let transform = if window_width > window_height * aspect_ratio {
-            let scale = window_height / board_height;
-            let offset = (window_width - window_height * aspect_ratio) / 2.0;
+        let transform = if width > height * aspect_ratio {
+            let scale = height / board_height;
+            let offset = (width - height * aspect_ratio) / 2.0;
             nanovg::Transform::new()
                 .translate(offset, 0.0)
                 .scale(scale, scale)
         } else {
-            let scale = window_width / board_width;
-            let offset = (window_height - window_width / aspect_ratio) / 2.0;
+            let scale = width / board_width;
+            let offset = (height - width / aspect_ratio) / 2.0;
             nanovg::Transform::new()
                 .translate(0.0, offset)
                 .scale(scale, scale)

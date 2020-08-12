@@ -57,7 +57,12 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let mut ui = match ui::UI::new(sgfs, parsed_args.move_delay, parsed_args.end_delay) {
+    let mut ui = match ui::UI::new(
+        sgfs,
+        parsed_args.move_delay,
+        parsed_args.end_delay,
+        parsed_args.annotations,
+    ) {
         Ok(ui) => ui,
         Err(error) => {
             eprintln!("{}", error);

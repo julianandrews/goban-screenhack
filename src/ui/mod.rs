@@ -1,41 +1,72 @@
-mod sgf_walker;
+mod annotations;
 mod goban_display;
+mod sgf_walker;
 
-use std::error;
-use std::time;
 use crate::goban::{Goban, Stone, StoneColor};
-use crate::sgf_parse::{SgfProp, SgfNode};
+use crate::sgf_parse::{SgfNode, SgfProp};
+use annotations::{AnnotationDisplay, Annotations};
 use goban_display::GobanDisplay;
 use sgf_walker::{GameState, SgfWalker};
+use std::error;
+use std::time;
 
 pub struct UI {
     goban: Goban,
     move_delay: u64,
     end_delay: u64,
+    draw_annotations: bool,
     game_state: GameState,
     last_action_time: time::Instant,
     sgf_walker: SgfWalker,
+    annotations: Annotations,
 }
 
 impl UI {
+    const ANNOTATION_BOX_WIDTH: f32 = 0.3;
+
     pub fn new(
         sgfs: Vec<SgfNode>,
         move_delay: u64,
         end_delay: u64,
+        draw_annotations: bool,
     ) -> Result<UI, Box<dyn error::Error>> {
         Ok(UI {
             goban: Goban::new((19, 19)),
             move_delay: move_delay,
             end_delay: end_delay,
+            draw_annotations: draw_annotations,
             game_state: GameState::New,
             last_action_time: time::Instant::now(),
             sgf_walker: SgfWalker::new(sgfs)?,
+            annotations: Annotations::new(),
         })
     }
 
     pub fn draw(&self, frame: &mut nanovg::Frame, width: f32, height: f32) {
-        let goban_display = GobanDisplay::new(&self.goban);
-        goban_display.draw(frame, width, height);
+        let aspect_ratio = if self.draw_annotations {
+            1.0 + UI::ANNOTATION_BOX_WIDTH
+        } else {
+            1.0
+        };
+        let goban_size = if width > height * aspect_ratio {
+            height
+        } else {
+            width / aspect_ratio
+        };
+        let transform = nanovg::Transform::new()
+            .translate((width - goban_size * aspect_ratio) / 2.0, (height - goban_size) / 2.0);
+        frame.transformed(transform, |mut frame| {
+            GobanDisplay::new(&self.goban).draw(&mut frame, goban_size, goban_size)
+        });
+        if self.draw_annotations {
+            frame.transformed(transform.translate(goban_size, 0.0), |mut frame| {
+                AnnotationDisplay::new(&self.annotations).draw(
+                    &mut frame,
+                    goban_size * UI::ANNOTATION_BOX_WIDTH,
+                    goban_size,
+                )
+            });
+        }
     }
 
     pub fn update_game_state(&mut self) -> Result<(), Box<dyn error::Error>> {
