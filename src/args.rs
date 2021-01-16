@@ -199,7 +199,6 @@ fn get_default_sgf_dir() -> Option<PathBuf> {
         .chain(xdg_data_dirs.into_iter())
         .map(|mut path| {
             path.push("goban-screenhack");
-            println!("{:?}", path);
             path
         })
         .filter(|path| path.exists())
