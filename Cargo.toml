@@ -27,14 +27,9 @@ sgf-parse = "3.0.2"
 version = "1.0.2"
 features = ["gl3"]
 
-[package.metadata.deb.variants.buster]
+[package.metadata.deb]
 assets = [
-    ["target/release/goban", "usr/lib/xscreensaver/", "755"],
-    ["config/goban.xml", "/usr/share/xscreensaver/config/", "644"],
-]
-
-[package.metadata.deb.variants.bullseye]
-assets = [
+    # use /usr/lib/xscreensaver for Debian Buster or Ubuntu Hirsuite
     ["target/release/goban", "usr/libexec/xscreensaver/", "755"],
     ["config/goban.xml", "/usr/share/xscreensaver/config/", "644"],
 ]
