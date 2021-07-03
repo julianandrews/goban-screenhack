@@ -25,8 +25,8 @@ impl UI {
     ) -> Result<UI, Box<dyn error::Error>> {
         Ok(UI {
             goban: Goban::new((19, 19)),
-            move_delay: move_delay,
-            end_delay: end_delay,
+            move_delay,
+            end_delay,
             game_state: GameState::New,
             last_action_time: time::Instant::now(),
             sgf_walker: SgfWalker::new(sgfs)?,
@@ -107,7 +107,7 @@ impl UI {
 
     fn get_board_size(&self) -> (u8, u8) {
         match self.sgf_walker.node().get_property("SZ") {
-            Some(go::Prop::SZ(size)) => size.clone(),
+            Some(go::Prop::SZ(size)) => *size,
             None => (19, 19),
             _ => unreachable!(),
         }

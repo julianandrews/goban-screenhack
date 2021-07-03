@@ -6,23 +6,20 @@ use std::ptr;
 
 // Self referential struct using a raw pointer to keep track of the current node.
 pub struct SgfWalker {
-    sgfs: std::pin::Pin<Box<Vec<SgfNode<go::Prop>>>>,
+    sgfs: std::pin::Pin<Vec<SgfNode<go::Prop>>>,
     node_ptr: ptr::NonNull<SgfNode<go::Prop>>,
 }
 
 impl SgfWalker {
     pub fn new(sgfs: Vec<SgfNode<go::Prop>>) -> Result<SgfWalker, SgfWalkerError> {
         if sgfs.is_empty() {
-            Err(SgfWalkerError::NoSgfs)?;
+            return Err(SgfWalkerError::NoSgfs);
         }
-        let sgfs = Box::pin(sgfs);
+        let sgfs = std::pin::Pin::new(sgfs);
         let mut rng = thread_rng();
         let node_ptr = ptr::NonNull::from(sgfs.choose(&mut rng).unwrap()); // sgfs is never empty
 
-        Ok(SgfWalker {
-            sgfs: sgfs,
-            node_ptr: node_ptr,
-        })
+        Ok(SgfWalker { sgfs, node_ptr })
     }
 
     pub fn node(&self) -> &SgfNode<go::Prop> {
@@ -37,7 +34,7 @@ impl SgfWalker {
                 let mut rng = thread_rng();
                 self.sgfs.choose(&mut rng).unwrap() // sgfs is never empty
             }
-            Some(node) => node
+            Some(node) => node,
         };
         self.node_ptr = ptr::NonNull::from(next_node);
 

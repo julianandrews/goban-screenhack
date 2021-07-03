@@ -33,11 +33,11 @@ impl Goban {
 
     pub fn add_stone(&mut self, stone: Stone) -> Result<(), GobanError> {
         if stone.x > self.size.0 || stone.y > self.size.1 {
-            Err(GobanError::InvalidMoveError)?;
+            return Err(GobanError::InvalidMoveError);
         }
         let key = (stone.x, stone.y);
         if self.stones.contains_key(&key) {
-            Err(GobanError::InvalidMoveError)?;
+            return Err(GobanError::InvalidMoveError);
         }
         self.stones.insert(key, stone.color);
 
@@ -100,7 +100,7 @@ impl Goban {
         };
         let mut group = HashSet::new();
         let mut to_process = VecDeque::new();
-        to_process.push_back(start_point.clone());
+        to_process.push_back(*start_point);
         while let Some(p) = to_process.pop_back() {
             group.insert(p);
             for neighbor in self.neighbors(p) {
@@ -110,7 +110,7 @@ impl Goban {
                 match self.stones.get(&neighbor) {
                     None => return,
                     Some(c) if c == group_color => {
-                        to_process.push_back(neighbor.clone());
+                        to_process.push_back(neighbor);
                     }
                     _ => {}
                 }
@@ -137,11 +137,7 @@ pub struct Stone {
 
 impl Stone {
     pub fn new(x: u8, y: u8, color: StoneColor) -> Stone {
-        Stone {
-            x: x,
-            y: y,
-            color: color,
-        }
+        Stone { x, y, color }
     }
 }
 

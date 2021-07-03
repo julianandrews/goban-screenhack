@@ -108,22 +108,19 @@ fn main() {
 }
 
 fn load_sgfs(
-    sgf_dirs: &Vec<std::path::PathBuf>,
+    sgf_dirs: &[std::path::PathBuf],
 ) -> Result<Vec<sgf_parse::SgfNode<sgf_parse::go::Prop>>, Box<dyn std::error::Error>> {
     let mut sgfs = vec![];
     for dir in sgf_dirs.iter() {
         for entry in std::fs::read_dir(&dir)? {
             let path = entry?.path();
             if path.is_file() {
-                match path.extension().and_then(std::ffi::OsStr::to_str) {
-                    Some("sgf") => {
-                        let contents = std::fs::read_to_string(path.clone())?;
-                        match sgf_parse::go::parse(&contents) {
-                            Ok(new_nodes) => sgfs.extend(new_nodes),
-                            Err(e) => eprintln!("Error parsing {}: {}", path.to_string_lossy(), e),
-                        }
+                if let Some("sgf") = path.extension().and_then(std::ffi::OsStr::to_str) {
+                    let contents = std::fs::read_to_string(path.clone())?;
+                    match sgf_parse::go::parse(&contents) {
+                        Ok(new_nodes) => sgfs.extend(new_nodes),
+                        Err(e) => eprintln!("Error parsing {}: {}", path.to_string_lossy(), e),
                     }
-                    _ => {}
                 }
             }
         }

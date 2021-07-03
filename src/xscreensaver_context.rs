@@ -55,20 +55,14 @@ impl XScreensaverContext {
                 };
                 let context =
                     unsafe { context_builder.build_raw_x11_context(xconn.clone(), window_id)? };
-                let window = WindowWrapper::RawWindow {
-                    xconn: xconn,
-                    window_id: window_id,
-                };
+                let window = WindowWrapper::RawWindow { xconn, window_id };
                 (context, window)
             }
         };
 
         let context = unsafe { context.make_current().map_err(|(_, e)| e)? };
 
-        Ok(XScreensaverContext {
-            context: context,
-            window: window,
-        })
+        Ok(XScreensaverContext { context, window })
     }
 
     pub fn context(&self) -> &glutin::RawContext<glutin::PossiblyCurrent> {

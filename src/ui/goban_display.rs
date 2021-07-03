@@ -26,7 +26,7 @@ impl<'a> GobanDisplay<'a> {
     ];
 
     pub fn new(goban: &'a Goban) -> GobanDisplay<'a> {
-        GobanDisplay { goban: goban }
+        GobanDisplay { goban }
     }
 
     pub fn draw(&self, frame: &mut nanovg::Frame, window_width: f32, window_height: f32) {

@@ -35,15 +35,12 @@ impl std::fmt::Display for UsageError {
 
 impl ::std::error::Error for UsageError {}
 
-pub fn parse_args(
-    opts: &getopts::Options,
-    args: &Vec<String>,
-) -> Result<GobanHackArgs, UsageError> {
+pub fn parse_args(opts: &getopts::Options, args: &[String]) -> Result<GobanHackArgs, UsageError> {
     let matches = opts
         .parse(&args[1..])
         .map_err(|_| UsageError::ArgumentParseError)?;
 
-    if matches.free.len() > 0 {
+    if !matches.free.is_empty() {
         return Err(UsageError::TooManyInputsError);
     };
 
@@ -54,11 +51,11 @@ pub fn parse_args(
     let print_help = matches.opt_present("h");
 
     Ok(GobanHackArgs {
-        window_type: window_type,
-        sgf_dirs: sgf_dirs,
-        move_delay: move_delay,
-        end_delay: end_delay,
-        print_help: print_help,
+        window_type,
+        sgf_dirs,
+        move_delay,
+        end_delay,
+        print_help,
     })
 }
 
@@ -126,7 +123,7 @@ pub fn parse_sgf_dirs(matches: &getopts::Matches) -> Vec<PathBuf> {
         .iter()
         .map(PathBuf::from)
         .collect();
-    if sgf_dirs.len() == 0 {
+    if sgf_dirs.is_empty() {
         get_default_sgf_dir().into_iter().collect()
     } else {
         sgf_dirs
@@ -174,7 +171,7 @@ fn parse_window_id(window_id_string: &str) -> Result<u64, std::num::ParseIntErro
     if window_id_string.starts_with("0x") {
         u64::from_str_radix(window_id_string.trim_start_matches("0x"), 16)
     } else {
-        u64::from_str_radix(&window_id_string, 10)
+        window_id_string.parse::<u64>()
     }
 }
 
@@ -183,7 +180,8 @@ fn get_default_sgf_dir() -> Option<PathBuf> {
         match std::env::var("XDG_DATA_HOME").ok().map(PathBuf::from) {
             Some(path) => path,
             None => {
-                let mut path = PathBuf::from(std::env::var("HOME").unwrap_or("".to_string()));
+                let mut path =
+                    PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| "".to_string()));
                 path.push(".local/share");
 
                 path
@@ -191,8 +189,8 @@ fn get_default_sgf_dir() -> Option<PathBuf> {
         }
     };
     let xdg_data_dirs: Vec<PathBuf> = std::env::var("XDG_DATA_DIRS")
-        .unwrap_or("/usr/local/share:/usr/share".to_string())
-        .split(":")
+        .unwrap_or_else(|_| "/usr/local/share:/usr/share".to_string())
+        .split(':')
         .map(PathBuf::from)
         .collect();
     std::iter::once(xdg_data_home)
@@ -201,6 +199,5 @@ fn get_default_sgf_dir() -> Option<PathBuf> {
             path.push("goban-screenhack");
             path
         })
-        .filter(|path| path.exists())
-        .next()
+        .find(|path| path.exists())
 }
