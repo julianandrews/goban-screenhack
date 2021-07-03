@@ -9,15 +9,18 @@ Goban hack for xscreensaver.
 ### Debian/Ubuntu
 
 Look for the `.deb` package
-[here](https://github.com/julianandrews/goban-screenhack/releases).
+[here](https://github.com/julianandrews/goban-screenhack/releases). For Ubuntu
+21.04 or older you should be able to use the 'buster' package. For 22.10 or later
+you will want the 'bullseye' package.
 
 ### Other x84_64 Linux
 
 There's a binary on the
 [releases](https://github.com/julianandrews/goban-screenhack/releases) page.
 
-Put the `goban` executable in the same place as your other hacks (probably
-`/usr/lib/xscreensaver`).
+Put the `goban` executable in the same place as your other hacks. Depending
+on your distribution this will likely be either `/usr/lib/xscreensaver` or
+`/usr/libexec/xscreensaver`.
 
 For a better experience when configuring put `config/goban.xml` from the source
 package with your other xscreensaver config files
