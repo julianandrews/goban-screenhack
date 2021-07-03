@@ -1,17 +1,17 @@
+use crate::sgf_parse::{go, SgfNode};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::error;
 use std::ptr;
-use super::SgfNode;
 
 // Self referential struct using a raw pointer to keep track of the current node.
 pub struct SgfWalker {
-    sgfs: std::pin::Pin<Box<Vec<SgfNode>>>,
-    node_ptr: ptr::NonNull<SgfNode>,
+    sgfs: std::pin::Pin<Box<Vec<SgfNode<go::Prop>>>>,
+    node_ptr: ptr::NonNull<SgfNode<go::Prop>>,
 }
 
 impl SgfWalker {
-    pub fn new(sgfs: Vec<SgfNode>) -> Result<SgfWalker, SgfWalkerError> {
+    pub fn new(sgfs: Vec<SgfNode<go::Prop>>) -> Result<SgfWalker, SgfWalkerError> {
         if sgfs.is_empty() {
             Err(SgfWalkerError::NoSgfs)?;
         }
@@ -25,7 +25,7 @@ impl SgfWalker {
         })
     }
 
-    pub fn node(&self) -> &SgfNode {
+    pub fn node(&self) -> &SgfNode<go::Prop> {
         unsafe { self.node_ptr.as_ref() }
     }
 

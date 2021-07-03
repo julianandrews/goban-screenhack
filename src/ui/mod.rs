@@ -1,12 +1,12 @@
-mod sgf_walker;
 mod goban_display;
+mod sgf_walker;
 
-use std::error;
-use std::time;
 use crate::goban::{Goban, Stone, StoneColor};
-use crate::sgf_parse::{SgfProp, SgfNode};
+use crate::sgf_parse::{go, SgfNode};
 use goban_display::GobanDisplay;
 use sgf_walker::{GameState, SgfWalker};
+use std::error;
+use std::time;
 
 pub struct UI {
     goban: Goban,
@@ -19,7 +19,7 @@ pub struct UI {
 
 impl UI {
     pub fn new(
-        sgfs: Vec<SgfNode>,
+        sgfs: Vec<SgfNode<go::Prop>>,
         move_delay: u64,
         end_delay: u64,
     ) -> Result<UI, Box<dyn error::Error>> {
@@ -64,36 +64,36 @@ impl UI {
     fn process_current_node(&mut self) -> Result<GameState, Box<dyn error::Error>> {
         for prop in self.sgf_walker.node().properties() {
             match prop {
-                SgfProp::B(sgf_parse::Move::Move(point)) => {
+                go::Prop::B(go::Move::Move(point)) => {
                     if !self.is_tt_pass(point) {
                         self.goban
                             .play_stone(Stone::new(point.x, point.y, StoneColor::Black))?;
                     }
                 }
-                SgfProp::W(sgf_parse::Move::Move(point)) => {
+                go::Prop::W(go::Move::Move(point)) => {
                     if !self.is_tt_pass(point) {
                         self.goban
                             .play_stone(Stone::new(point.x, point.y, StoneColor::White))?;
                     }
                 }
-                SgfProp::AB(points) => {
+                go::Prop::AB(points) => {
                     for point in points.iter() {
                         self.goban
                             .add_stone(Stone::new(point.x, point.y, StoneColor::Black))?;
                     }
                 }
-                SgfProp::AW(points) => {
+                go::Prop::AW(points) => {
                     for point in points.iter() {
                         self.goban
                             .add_stone(Stone::new(point.x, point.y, StoneColor::White))?;
                     }
                 }
-                SgfProp::AE(points) => {
+                go::Prop::AE(points) => {
                     for point in points.iter() {
                         self.goban.clear_point((point.x, point.y));
                     }
                 }
-                SgfProp::MN(num) => self.goban.set_move_number(*num as u64),
+                go::Prop::MN(num) => self.goban.set_move_number(*num as u64),
                 _ => {}
             }
         }
@@ -101,13 +101,13 @@ impl UI {
         Ok(self.sgf_walker.next_node())
     }
 
-    fn is_tt_pass(&self, point: &sgf_parse::Point) -> bool {
+    fn is_tt_pass(&self, point: &go::Point) -> bool {
         point.x == 19 && point.y == 19 && self.goban.size.0 < 20 && self.goban.size.1 < 20
     }
 
     fn get_board_size(&self) -> (u8, u8) {
         match self.sgf_walker.node().get_property("SZ") {
-            Some(SgfProp::SZ(size)) => size.clone(),
+            Some(go::Prop::SZ(size)) => size.clone(),
             None => (19, 19),
             _ => unreachable!(),
         }

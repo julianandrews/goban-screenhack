@@ -18,10 +18,10 @@ path = "src/main.rs"
 
 [dependencies]
 getopts = "0.2.21"
-glutin = "0.26.0"
+glutin = "0.27.0"
 gl = "0.14.0"
-rand = "0.8.2"
-sgf-parse = "2.0.2"
+rand = "0.8.4"
+sgf-parse = "3.0.2"
 
 [dependencies.nanovg]
 version = "1.0.2"
