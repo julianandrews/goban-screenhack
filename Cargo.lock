@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "goban-screenhack"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "getopts",
  "gl",
@@ -939,9 +939,9 @@ checksum = "9bdd36f49e35b61d49efd8aa7fc068fd295961fd2286d0b2ee9a4c7a14e99cc3"
 
 [[package]]
 name = "sgf-parse"
-version = "3.0.2"
+version = "3.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "332eb66aaeabb5eac3015e3ab15a2ac7bffde1198892cbcbe3e51899639b68df"
+checksum = "ee7fad4fdfe06a5070830a2ecb7f9e3dc5a0eb4ca95e60ac08687d9db2a939e5"
 
 [[package]]
 name = "shared_library"
